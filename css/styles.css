@@ -1,0 +1,55 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.btn-primary {
+  background-color: #357ABD;
+  border: none;
+}
+
+.btn-outline-secondary {
+  border-color: #357ABD;
+  color: #357ABD;
+}
+
+header {
+  background-color: #3B7D57;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+header h2,
+header nav a {
+  color: #fff;
+}
+
+nav a:hover {
+  color: #D0F5E1;
+  text-decoration: underline;
+}
+
+nav a {
+  color: #fff; /* White for clean contrast inside green header */
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+nav a:hover {
+  color: #D0F5E1; /* Minty green on hover for warmth */
+  text-decoration: underline;
+}
+
+footer {
+  font-size: 1.25rem;
+}
+
+/* LOGIN PAGE */
+.lead {
+  font-weight: 650;
+  font-size: 1.75rem;
+  color: #3B7D57;
+  padding-top: 300px;
+}
