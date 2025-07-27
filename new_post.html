@@ -16,12 +16,13 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
     import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
       authDomain: "true-circle-gui2.firebaseapp.com",
       projectId: "true-circle-gui2",
-      databaseURL: "https://true-circle-gui2-default-rtdb.firebaseio.com", // 👈 Add this line
+      databaseURL: "https://true-circle-gui2-default-rtdb.firebaseio.com",
       storageBucket: "true-circle-gui2.firebasestorage.app",
       messagingSenderId: "198661237874",
       appId: "1:198661237874:web:a1ef7e3556f3a08e6da6eb",
@@ -31,16 +32,28 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
     const form = document.querySelector("form");
-    form.addEventListener("submit", function(e) {
+
+    form.addEventListener("submit", async function(e) {
       e.preventDefault();
 
       const content = document.getElementById("postContent").value.trim();
-      if (content === "") return alert("Let’s fill the circle with something first 🌱");
+      const imageFile = document.getElementById("postImage").files[0];
+
+      if (!content) return alert("Let’s fill the circle with something first 🌱");
+
+      let imageURL = "";
+      if (imageFile) {
+        const imageRef  = sRef(storage, "post_images/" + Date.now() + "_" + imageFile.name);
+        await uploadBytes(imageRef , imageFile);
+        imageURL = await getDownloadURL(imageRef );
+      }
 
       push(ref(db, "posts"), {
         content: content,
+        imageURL: imageURL,
         timestamp: Date.now(),
         upvotes: 0,
         downvotes: 0,
@@ -51,6 +64,7 @@
       alert("Your post is now part of the circle 💬");
     });
   </script>
+
 	
   <!-- Header -->
   <header class="container-fluid py-3 shadow-sm fixed-top">
@@ -83,7 +97,7 @@
           <label for="postContent" class="form-label">Your Post</label>
           <textarea id="postContent" class="form-control" rows="6" placeholder="Share a thought, a story, or a truth..."></textarea>
         </div>
-		  
+
         <div class="mb-3">
           <label for="postImage" class="form-label">Attach an image (optional)</label>
           <input type="file" class="form-control" id="postImage" accept="image/*">
@@ -95,6 +109,7 @@
       </form>
     </section>
   </main>
+
 
   <!-- Footer -->
   <footer class="text-center px-3 mt-5 pt-3">

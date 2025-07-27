@@ -71,3 +71,9 @@ footer {
   background: #fff;
   border-radius: 10px;
 }
+
+.post-image {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}

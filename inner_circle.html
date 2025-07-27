@@ -14,6 +14,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -52,15 +53,25 @@
 
         div.innerHTML = `
           <p class="mb-2">${post.content}</p>
+          ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
           <div class="d-flex align-items-center mb-1">
             <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
             <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
+            <button class="btn btn-sm btn-outline-secondary me-2 delete">🗑️</button>
             <small class="${scoreClass}">Score: ${scorePercent}%</small>
           </div>
         `;
 
         div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
         div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+        div.querySelector(".delete").addEventListener("click", () => {
+          const confirmDelete = confirm("Delete this post?");
+          if (confirmDelete) {
+            const postRef = ref(db, `posts/${post.key}`);
+            remove(postRef);
+          }
+        });
+
         feed.appendChild(div);
       });
     });
@@ -115,70 +126,15 @@
     <section class="mx-auto" style="max-width: 700px;">
       <h2 class="mb-4 text-center">Inner Circle Feed</h2>
   
-      <!-- Temporary Post Card 1 -->
-      <div class="card p-3 mb-4 shadow-sm">
-        <div class="d-flex justify-content-between">
-          <strong>@Koda-B</strong>
-          <small class="text-muted">2h ago</small>
-        </div>
-        <p class="mt-2 mb-1">Took a surprise swim today! Water was cool, and I might have swallowed a leaf.<br><br>#FloofLife #GettingDry. 🌲✨</p>
-        <img src="img/koda-splash.jpg" alt="koda splash" class="img-fluid rounded mb-2">
-  
-        <!-- Feedback Row -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-success btn-sm">👍</button>
-            <button type="button" class="btn btn-outline-danger btn-sm">👎</button>
-          </div>
-          <div class="text-muted" style="font-size: 0.9em;">
-            Vote Balance: <strong>99% positive</strong>
-          </div>
-        </div>
+      <!-- Feed -->
+      <div class="container mt-4">
+        <h3 class="mb-4">Your Inner Circle</h3>
+        <div id="feed"></div>
       </div>
-  
-      <!-- Temporary Post Card 2 -->
-      <div class="card p-3 mb-4 shadow-sm">
-        <div class="d-flex justify-content-between">
-          <strong>@Lilly-P-Hopper</strong>
-          <small class="text-muted">2h ago</small>
-        </div>
-        <p class="mt-2 mb-1">Just watched a polarbear cloud cannonball into my living room.<br><br>#DogInvasion #StillInMyPond</p>
-        <img src="img/frog2.jpg" alt="frog" class="img-fluid rounded mb-2">
-  
-        <!-- Feedback Row -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <div class="btn-group" role="group">
-			<button class="btn btn-link p-0" onclick="openComments()">💬 View Comments</button>
-            <button type="button" class="btn btn-outline-success btn-sm">👍</button>
-            <button type="button" class="btn btn-outline-danger btn-sm">👎</button>
-          </div>
-          <div class="text-muted" style="font-size: 0.9em;">
-            Vote Balance: <strong>87% positive</strong>
-          </div>
-        </div>
-      </div>
-		
-      <div id="commentOverlay" class="overlay d-none">
-        <div class="overlay-content card p-4 shadow">
-          <h5 class="mb-3">Comments</h5>
-          <div class="comment mb-3">
-            <strong>@frogfriend</strong><br>
-            I love this—it resonates deeply.
-          </div>
-          <textarea class="form-control mb-3" placeholder="Add your comment..."></textarea>
-          <button class="btn btn-primary">Submit</button>
-          <button class="btn btn-secondary" onclick="closeComments()">Close</button>
-        </div>
-      </div>
-  
     </section>
+    
   </main>
 
-  <!-- Feed -->
-  <div class="container mt-4">
-    <h3 class="mb-4">Your Inner Circle</h3>
-    <div id="feed"></div>
-  </div>
 
   <!-- Footer -->
   <footer class="text-center px-3 mt-5 pt-3">
