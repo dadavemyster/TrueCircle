@@ -10,6 +10,16 @@
 </head>
 
 <body class="bg-light">
+  <!-- Ensure user is logged in. -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    const auth = getAuth();
+
+    onAuthStateChanged(auth, user => {
+      if (!user) window.location.href = "index.html";
+    });
+  </script>
+
   <!-- Firebase & Feed Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
