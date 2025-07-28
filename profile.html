@@ -1,26 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-
+	
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>True Circle - Inner Circle</title>
+  <title>True Circle - Login</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
+	
+<body class="d-flex flex-column align-items-center vh-100 bg-light">
+  
+  
 
-<body class="bg-light">
-  <!-- Ensure user is logged in. -->
-  <script type="module">
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    const auth = getAuth();
+	
+  <!-- Header -->
+  <header class="container-fluid py-3 shadow-sm fixed-top">
+    <!-- Logo -->
+    <div class="row align-items-center px-4">
+      <div class="col-md-3 text-md-start text-center">
+        <a href="index.html" class="text-decoration-none text-dark">
+          <h2 class="fw-bold mb-0">True Circle</h2>
+        </a>
+      </div>
 
-    onAuthStateChanged(auth, user => {
-      if (!user) window.location.href = "index.html";
-    });
-  </script>
+      <!-- Navigation Bar -->
+      <div class="col-md-9 text-md-end text-center mt-2 mt-md-0">
+        <nav>
+          <a href="inner_circle.html" class="mx-2 text-decoration-none">Inner Circle</a>
+          <a href="#" class="mx-2 text-decoration-none">Outer Circle</a>
+          <a href="new_post.html" class="mx-2 text-decoration-none">New Post</a>
+          <a href="profile.html" class="mx-2 text-decoration-none">Profile</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+	
 
-  <!-- Firebase & Feed Logic -->
+  <!-- Main Content -->
+  <!-- Profile image and bio -->
+  <div class="d-flex col-md-12 d-flex gap-4 pt-5 px-5 align-items-center" style="max-width: 600px;">
+    <!-- Need to be added to firebase user data -->
+    <img class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
+    <text class="col-md-9">Mock-up bio - I love frogs and tomatoes, but I super love eating both. Cowboys might be cool too if they had bigger hats.</text>
+  </div>
+
+  <!--Posts & Activity tabs-->
+  <div class="col-md-12 d-flex gap-5 pt-5" style="max-width: 600px;">
+    <!-- Posts container is on by default-->
+    <button id="posts" class="flex-fill btn btn-success fs-1">Posts</button>
+    <button id="activity" class="flex-fill btn btn-secondary fs-1">Activity</button>
+  </div>
+
+
+
+  <!-- Firebase & Feed Logic Mock-Version -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
@@ -39,7 +73,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const feed = document.getElementById("feed");
+    const feed = document.getElementById("yourPosts");
 
     onValue(ref(db, "posts"), snapshot => {
       const posts = [];
@@ -130,64 +164,53 @@
     }
   </script>
 
-  <!-- Header -->
-  <header class="container-fluid py-3 shadow-sm fixed-top">
-    <!-- Logo -->
-    <div class="row align-items-center px-4">
-      <div class="col-md-3 text-md-start text-center">
-        <a href="index.html" class="text-decoration-none text-dark">
-          <h2 class="fw-bold mb-0">True Circle</h2>
-        </a>
-      </div>
-
-      <!-- Navigation Bar -->
-      <div class="col-md-9 text-md-end text-center mt-2 mt-md-0">
-        <nav>
-          <a href="inner_circle.html" class="mx-2 text-decoration-none">Inner Circle</a>
-          <a href="#" class="mx-2 text-decoration-none">Outer Circle</a>
-          <a href="new_post.html" class="mx-2 text-decoration-none">New Post</a>
-          <a href="profile.html" class="mx-2 text-decoration-none">Profile</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="container pt-5">
+  <!-- Posts -->
+  <div id="postsContainer" class="container pt-5">
     <section class="mx-auto" style="max-width: 700px;">
-      <h2 class="mb-4 text-center">Your Inner Circle</h2>
-  
-      <!-- Feed -->
       <div class="container mt-4">
-        <div id="feed"></div>
+        <div id="yourPosts"></div>
       </div>
     </section>
-    
-  </main>
-
-
+  </div>
+  <!-- Activity -->
+  <div id="activityContainer" class="container pt-5">
+    <section class="mx-auto d-none" style="max-width: 700px;">
+      <div class="container mt-4">
+        <div id="activity"></div>
+      </div>
+    </section>
+  </div>
   <!-- Footer -->
   <footer class="text-center px-3 mt-5 pt-3">
     <small class="text-muted">Built for Truth. Wired for Connection.</small>
   </footer>
 
-  <!-- Bootstrap JS Bundle -->
+  <script>
+        const postsButton = document.getElementById("posts");
+        const activityButton = document.getElementById("activity");
+        const postsContainer = document.getElementById("postsContainer");
+        const activityContainer = document.getElementById("activityContainer");
+
+        postsButton.addEventListener("click", ()=> {
+            postsContainer.classList.remove("d-none");
+            activityContainer.classList.add("d-none");
+            postsButton.classList.replace("btn-secondary", "btn-success");
+            activityButton.classList.replace("btn-success", "btn-secondary");
+        });
+
+        activityButton.addEventListener("click", ()=> {
+            activityContainer.classList.remove("d-none");
+            postsContainer.classList.add("d-none");
+            postsButton.classList.replace("btn-success", "btn-secondary");
+            activityButton.classList.replace("btn-secondary", "btn-success");
+        });
+    </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Dynamic Header Spacing -->
+  <!-- This script helps add a buffer so header doesn't float over content on the top of page. -->
   <script>
-    const header = document.querySelector('header');
-    document.body.style.paddingTop = `${header.offsetHeight + 25}px`;
+  	const headerHeight = document.querySelector('header').offsetHeight;
+  	document.body.style.paddingTop = `${headerHeight + 25}px`;
   </script>
-	
-  <script>
-	function openComments() {
-      document.getElementById('commentOverlay').classList.remove('d-none');
-    }
-    function closeComments() {
-      document.getElementById('commentOverlay').classList.add('d-none');
-    }
-  </script>
-
 </body>
 </html>
