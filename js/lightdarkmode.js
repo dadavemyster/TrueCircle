@@ -1,0 +1,25 @@
+let isLight = true;
+let bodyBackground = document.getElementById("bg");
+let imageButton = document.getElementById("lightdark");
+let textColor = document.getElementsByClassName("lightdarkchange");
+
+function lightdark() {
+    isLight = !isLight;
+    if (isLight == true) {
+        bodyBackground.classList.remove("bg-dark");
+        bodyBackground.classList.add("bg-light");
+        imageButton.src = "img/sun.png";
+        for (let i = 0; i < textColor.length; i++) {
+            textColor[i].classList.add("text-muted");
+            textColor[i].classList.remove("text-white");
+        }
+    } else {
+        bodyBackground.classList.add("bg-dark");
+        bodyBackground.classList.remove("bg-light");
+        imageButton.src = "img/moon.png";
+        for (let i = 0; i < textColor.length; i++) {
+            textColor[i].classList.add("text-white");
+            textColor[i].classList.remove("text-muted");
+        }
+    }   
+};
