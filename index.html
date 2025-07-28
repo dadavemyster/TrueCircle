@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 	
-<body class="d-flex flex-column align-items-center vh-100 bg-light">
+<body id="bg" class="d-flex flex-column align-items-center vh-100 bg-light">
   
   
   <!-- FIREBASE -->
@@ -104,6 +104,7 @@
           <a href="inner_circle.html" class="mx-2 text-decoration-none">Inner Circle</a>
           <a href="#" class="mx-2 text-decoration-none">Outer Circle</a>
           <a href="new_post.html" class="mx-2 text-decoration-none">New Post</a>
+          <img id="lightdark" src="img/sun.png" style="height: 27px;" onclick="lightdark()"></button>
           <a href="profile.html" class="mx-2 text-decoration-none">Profile</a>
         </nav>
       </div>
@@ -136,7 +137,7 @@
     </form>
   </div>
 
-  <footer class="mt-4 large text-center px-3">
+  <footer class="mt-4 large text-center px-3 lightdarkchange">
     <h2>A UML GUI II Project by</h2>David Boulos<br>Kevin Kuang<br>Kelvin Lee<br>Senny Lu<br><br><br><br>
   </footer>
 
@@ -147,5 +148,6 @@
   	const headerHeight = document.querySelector('header').offsetHeight;
   	document.body.style.paddingTop = `${headerHeight + 25}px`;
   </script>
+  <script src="js/lightdarkmode.js"></script>
 </body>
 </html>
