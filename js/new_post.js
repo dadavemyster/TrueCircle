@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
@@ -19,11 +20,15 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+
 
 const form = document.querySelector("form");
 
 form.addEventListener("submit", async function(e) {
   e.preventDefault();
+
+  const user = auth.currentUser;
 
   const content = document.getElementById("postContent").value.trim();
   const imageFile = document.getElementById("postImage").files[0];
@@ -43,7 +48,8 @@ form.addEventListener("submit", async function(e) {
     timestamp: Date.now(),
     upvotes: 0,
     downvotes: 0,
-    score: 0
+    score: 0,
+    email: user.email
   });
 
   form.reset();
