@@ -42,7 +42,6 @@ document.querySelector('form').addEventListener('submit', e => {
     .then(userCred => {
       alert("Welcome to the Circle 🌿");
       window.location.href = "inner_circle.html";
-      worked = true;
     })
     .catch(error => {
       alert("Login failed. Check your info ✉️");
