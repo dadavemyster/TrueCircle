@@ -11,83 +11,6 @@
 	
 <body class="d-flex flex-column align-items-center vh-100 bg-light">
   
-  
-  <!-- FIREBASE -->
-  <script type="module">
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 
-      "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
-    import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
-      authDomain: "true-circle-gui2.firebaseapp.com",
-      projectId: "true-circle-gui2",
-      storageBucket: "true-circle-gui2.firebasestorage.app",
-      messagingSenderId: "198661237874",
-      appId: "1:198661237874:web:a1ef7e3556f3a08e6da6eb",
-      measurementId: "G-LHNKWW2X12"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const analytics = getAnalytics(app);
-    
-    // Login handler
-    document.querySelector('form').addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(userCred => {
-          alert("Welcome to the Circle 🌿");
-          window.location.href = "inner_circle.html"; // Redirect post-login
-        })
-        .catch(error => {
-          alert("Login failed. Check your info ✉️");
-          console.error(error);
-        });
-    });
-
-    // Register handler
-    document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCred => {
-          alert("Circle membership created 💫");
-          window.location.href = "inner_circle.html";
-        })
-        .catch(error => {
-          alert("Registration failed. Try again 🔁");
-          console.error(error);
-        });
-    });
-
-    // Password reset handler
-    document.getElementById('resetPasswordLink').addEventListener('click', () => {
-      const email = document.getElementById('email').value.trim();
-      if (!email) {
-        alert("Please enter your email first ✉️");
-        return;
-      }
-
-      sendPasswordResetEmail(auth, email)
-        .then(() => {
-          alert("Reset link sent! Check your inbox 💌");
-        })
-        .catch(error => {
-          alert("Could not send reset link. Try again 🔁");
-          console.error(error);
-        });
-    });
-  </script>
-	
   <!-- Header -->
   <header class="container-fluid py-3 shadow-sm fixed-top">
     <!-- Logo -->
@@ -140,11 +63,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	
-  <!-- This script helps add a buffer so header doesn't float over content on the top of page. -->
-  <script>
-  	const headerHeight = document.querySelector('header').offsetHeight;
-  	document.body.style.paddingTop = `${headerHeight + 25}px`;
-  </script>
+	<!-- JS Scripts -->
+  <script type="module" src="js/index.js"></script>
+  <script type="module" src="js/headerspacing.js"></script>
+  
 </body>
 </html>
