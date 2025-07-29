@@ -81,9 +81,8 @@ onValue(ref(db, "posts"), snapshot => {
     });
 
     feed.appendChild(div);
-    
+
     if (user.email != post.email) {
-        console.log(user.email + " " + post.email);
         let deleteButton = document.getElementsByClassName("delete");
         for (let i = 0; i < deleteButton.length; i++) {
             deleteButton[i].classList.add("d-none");

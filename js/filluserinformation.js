@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -14,12 +15,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
+const db = getDatabase();
 
 const username = document.getElementById("userName");
 const bio = document.getElementById("bio");
 
 onAuthStateChanged(auth, user => {
     username.innerHTML = user.email;
-    //fix this
-    bio.innerHTML = "user.bio";
+    //working on this
+    bio.innerHTML = "work in progress";
 });
