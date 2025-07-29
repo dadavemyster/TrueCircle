@@ -63,7 +63,7 @@ onValue(ref(db, "posts"), snapshot => {
         <div>
           <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
           <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
-          <button class="btn btn-sm btn-outline-secondary me-2 delete">🗑️</button>
+          <button class="btn btn-sm btn-outline-secondary me-2 delete ${post.email}">🗑️</button>
           <small class="${scoreClass}">Score: ${scorePercent}%</small>
         </div>
         <small class="text-muted">🕓 ${postAge} by ${post.email}</small>
@@ -83,7 +83,7 @@ onValue(ref(db, "posts"), snapshot => {
     feed.appendChild(div);
 
     if (user.email != post.email) {
-        let deleteButton = document.getElementsByClassName("delete");
+        let deleteButton = document.getElementsByClassName(post.email);
         for (let i = 0; i < deleteButton.length; i++) {
             deleteButton[i].classList.add("d-none");
         }
