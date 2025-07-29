@@ -15,7 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const feed = document.getElementById("feed");
+const feed = document.getElementById("yourPosts");
 const auth = getAuth(app);
 
 onValue(ref(db, "posts"), snapshot => {
@@ -68,6 +68,18 @@ onValue(ref(db, "posts"), snapshot => {
         </div>
         <small class="text-muted">🕓 ${postAge} by ${post.email}</small>
       </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 👍 Upvotes: </small><small>${post.upvotes}</small>
+      </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 👎 Downvotes: </small><small>${post.downvotes}</small>
+      </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 💬 Comments: </small><small>${"comment#"}</small>
+      </div>
     `;
 
     div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
@@ -79,15 +91,9 @@ onValue(ref(db, "posts"), snapshot => {
         remove(postRef);
       }
     });
-
-    feed.appendChild(div);
     
-    if (user.email != post.email) {
-        console.log(user.email + " " + post.email);
-        let deleteButton = document.getElementsByClassName("delete");
-        for (let i = 0; i < deleteButton.length; i++) {
-            deleteButton[i].classList.add("d-none");
-        }
+    if (user.email == post.email) {
+        feed.appendChild(div);
     }
   });
 });
