@@ -88,6 +88,7 @@ onValue(ref(db, "posts"), snapshot => {
             deleteButton[i].classList.add("d-none");
         }
     }
+    if (post.circle !== "outer") return;
   });
 });
 

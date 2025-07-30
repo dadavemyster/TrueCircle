@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
+import { shouldHidePost } from './filterLowScorePosts.js';
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
   authDomain: "true-circle-gui2.firebaseapp.com",
@@ -32,6 +32,7 @@ onValue(ref(db, "posts"), snapshot => {
   feed.innerHTML = "";
 
   posts.forEach(post => {
+    if (shouldHidePost(post)) return;
     const scorePercent = (post.score * 100).toFixed(1);
     const scoreClass = post.score >= 0.75 ? "score-high"
                      : post.score >= 0.5 ? "score-medium"

@@ -29,9 +29,9 @@ form.addEventListener("submit", async function(e) {
   e.preventDefault();
 
   const user = auth.currentUser;
-
   const content = document.getElementById("postContent").value.trim();
   const imageFile = document.getElementById("postImage").files[0];
+  const circleType = document.getElementById("circleType").value; // ← Add this
 
   if (!content) return alert("Let’s fill the circle with something first 🌱");
 
@@ -49,7 +49,8 @@ form.addEventListener("submit", async function(e) {
     upvotes: 0,
     downvotes: 0,
     score: 0,
-    email: user.email
+    email: user.email,
+    circle: circleType // ← This is critical!
   });
 
   form.reset();
