@@ -22,7 +22,7 @@ const storage = getStorage();
 
 const form = document.querySelector("#addFriendForm");
 
-form.addEventListener("submit", async function(e) {
+form.addEventListener("submit", function(e) {
     e.preventDefault();
 
     const user = auth.currentUser;
@@ -30,11 +30,14 @@ form.addEventListener("submit", async function(e) {
     const userRef = ref(db, `users/${userUID}`);
 
     const friendAdding = document.getElementById("friendEmail").value.trim().toLowerCase();
-
     get(ref(db, "users")).then(snapshot => {
         snapshot.forEach(child => {
             const childData = child.val();
+
             const childUID = child.key;
+
+            if (!childData.email) return;
+            
             if (childData.email.toLowerCase() == friendAdding){
                 update(userRef, {
                     [`friendRequests/${childUID}`] : true,
@@ -50,16 +53,18 @@ onValue(ref(db, "users"), snapshot => {
     const userUID = user.uid;
     const userRef = ref(db, `users/${userUID}`);
 
+    const userSnapshot = snapshot.child(userUID);
+
     snapshot.forEach(child => {
         const childData = child.val();
         const childUID = child.key;
 
-        if (child.child("friendRequests").hasChild(userUID)) {
+        if (child.child("friendRequests").hasChild(userUID) && userSnapshot.child("friendRequests").hasChild(childUID)) {
             const childRef = ref(db, `users/${childUID}`);
             update(userRef, {
                 [`friends/${childUID}`] : true,
             });
-            remove(ref(db, `users/${childUID}/friendRequests/${userUID}`));
+            remove(ref(db, `users/${childUID}/friendRequests/${childUID}`));
             update(childRef, {
                 [`friends/${userUID}`] : true,
             });
