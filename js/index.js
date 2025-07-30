@@ -65,19 +65,25 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCred => {
       const user = userCred.user;
-      console.log("User created:", user.uid);
-
+      console.log("✅ User created:", user.uid);
       addUsertoDatabase(user);
 
-      return user.sendEmailVerification();
+      return user.sendEmailVerification()
+        .then(() => {
+          console.log("📧 Verification email sent");
+          alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
+          return signOut(auth);
+        })
+        .catch(emailErr => {
+          console.error("❌ Email verification failed:", emailErr.code, emailErr.message);
+          alert(`Verification failed ⚠️\n${emailErr.code}: ${emailErr.message}`);
+          // Optional: Sign out anyway so they can't log in
+          return signOut(auth);
+        });
     })
-    .then(() => {
-      alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
-      return signOut(auth);
-    })
-    .catch(error => {
-      console.error("Registration error:", error.code, error.message);
-      alert(`Signup failed ⚠️\n${error.code}: ${error.message}`);
+    .catch(regErr => {
+      console.error("❌ Registration failed:", regErr.code, regErr.message);
+      alert(`Signup failed ⚠️\n${regErr.code}: ${regErr.message}`);
     });
 });
 
