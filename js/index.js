@@ -7,9 +7,10 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
-  sendEmailVerification
+  sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -41,7 +42,7 @@ function addUsertoDatabase(user) {
   });
 }
 
-// Login with verification enforcement
+// ----------------- EMAIL/PASSWORD LOGIN -----------------
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
@@ -65,7 +66,7 @@ document.querySelector('form').addEventListener('submit', e => {
     });
 });
 
-// Register flow with enhanced error handling
+// ----------------- REGISTRATION -----------------
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -76,7 +77,7 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
     console.log("✅ User created:", user.uid);
     addUsertoDatabase(user);
 
-    // Modular way to send email verification
+    // Send verification email
     return sendEmailVerification(user);
   })
   .then(() => {
@@ -90,7 +91,7 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
 
 });
 
-// Password reset flow
+// ----------------- PASSWORD RESET -----------------
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -108,7 +109,7 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     });
 });
 
-// Optional: resend verification email
+// ----------------- RESEND VERIFICATION -----------------
 function resendVerificationEmail() {
   const user = auth.currentUser;
   if (user && !user.emailVerified) {
@@ -119,4 +120,25 @@ function resendVerificationEmail() {
         alert("Could not resend email. Try again later.");
       });
   }
+}
+
+// ----------------- GOOGLE LOGIN -----------------
+const googleLoginBtn = document.getElementById("googleLogin");
+if (googleLoginBtn) {
+  googleLoginBtn.addEventListener("click", async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in DB, if not, add them
+      addUsertoDatabase(user);
+
+      alert("Welcome with Google 🌿");
+      window.location.href = "inner_circle.html";
+    } catch (error) {
+      console.error("Google login error:", error.code, error.message);
+      alert("Google login failed ⚠️ Try again later.");
+    }
+  });
 }
