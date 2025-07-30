@@ -27,7 +27,7 @@ const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// ✅ Save new user to Realtime Database
+// Save new user to Realtime Database
 function addUsertoDatabase(user) {
   set(ref(db, "users/" + user.uid), {
     bioImageURL: "img/cow.jpg",
@@ -41,7 +41,7 @@ function addUsertoDatabase(user) {
   });
 }
 
-// 🔐 Login with verification enforcement
+// Login with verification enforcement
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
@@ -65,7 +65,7 @@ document.querySelector('form').addEventListener('submit', e => {
     });
 });
 
-// 🆕 Register flow with enhanced error handling
+// Register flow with enhanced error handling
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -73,21 +73,24 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   createUserWithEmailAndPassword(auth, email, password)
   .then(userCred => {
     const user = userCred.user;
+    console.log("✅ User created:", user.uid);
     addUsertoDatabase(user);
 
+    // Modular way to send email verification
     return sendEmailVerification(user);
   })
   .then(() => {
-    alert("Verification sent! Check your inbox 📧");
+    alert("Verification email sent ✅\nCheck your inbox before logging in.");
     return signOut(auth);
   })
   .catch(error => {
-    console.error("Signup error:", error.code, error.message);
-    alert(`Signup failed: ${error.message}`);
+    console.error("❌ Registration error:", error.code, error.message);
+    alert(`Signup failed ⚠️ ${error.code}: ${error.message}`);
   });
+
 });
 
-// 🔁 Password reset flow
+// Password reset flow
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -105,7 +108,7 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     });
 });
 
-// 🔁 Optional: resend verification email
+// Optional: resend verification email
 function resendVerificationEmail() {
   const user = auth.currentUser;
   if (user && !user.emailVerified) {
