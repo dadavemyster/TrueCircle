@@ -1,3 +1,4 @@
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
@@ -84,5 +85,20 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     .catch(error => {
       alert("Could not send reset link. Try again 🔁");
       console.error(error);
+    });
+});
+
+document.getElementById('googleLogin').addEventListener('click', () => {
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      const user = result.user;
+      addUsertoDatabase(user);
+      alert("Signed in with Google ✅");
+      window.location.href = "inner_circle.html";
+    })
+    .catch((error) => {
+      console.error("Google sign-in failed", error);
+      alert("Google login failed ❌");
     });
 });
