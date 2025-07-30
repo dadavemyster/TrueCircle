@@ -1,15 +1,7 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
-  sendEmailVerification
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -27,21 +19,20 @@ const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Save new user to Realtime Database
+// User Database
 function addUsertoDatabase(user) {
-  set(ref(db, "users/" + user.uid), {
-    bioImageURL: "img/cow.jpg",
-    bioText: "Nothing Yet",
-    dateCreated: Date.now(),
-    friends: [],
-    posts: [],
-    postsUpvoted: [],
-    postsDownvoted: [],
-    email: user.email
-  });
+    set(ref(db, "users/" + user.uid), {
+        bioImageURL: "img/cow.jpg",
+        bioText: "Nothing Yet",
+        dateCreated: Date.now(),
+        friends: [],
+        posts: [],
+        postsUpvoted: [],
+        postsDownvoted: [],
+        email: user.email
+    });
 }
 
-// Login with verification enforcement
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
@@ -49,48 +40,36 @@ document.querySelector('form').addEventListener('submit', e => {
 
   signInWithEmailAndPassword(auth, email, password)
     .then(userCred => {
-      const user = userCred.user;
-
-      if (user.emailVerified) {
-        alert("Welcome to the Circle 🌿");
-        window.location.href = "inner_circle.html";
-      } else {
-        alert("Please verify your email before logging in 🔐");
-        signOut(auth); // Kick them out if not verified
-      }
+      alert("Welcome to the Circle 🌿");
+      window.location.href = "inner_circle.html";
     })
     .catch(error => {
-      console.error("Login error:", error.code, error.message);
       alert("Login failed. Check your info ✉️");
+      console.error(error);
     });
 });
 
-// Register flow with enhanced error handling
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
 
+  let worked = false;
+
   createUserWithEmailAndPassword(auth, email, password)
-  .then(userCred => {
-    const user = userCred.user;
-    console.log("✅ User created:", user.uid);
-    addUsertoDatabase(user);
-
-    // Modular way to send email verification
-    return sendEmailVerification(user);
-  })
-  .then(() => {
-    alert("Verification email sent ✅\nCheck your inbox before logging in.");
-    return signOut(auth);
-  })
-  .catch(error => {
-    console.error("❌ Registration error:", error.code, error.message);
-    alert(`Signup failed ⚠️ ${error.code}: ${error.message}`);
-  });
-
+    .then(userCred => {
+      addUsertoDatabase(userCred.user)
+      alert("Circle membership created 💫");
+      worked = true;
+    })
+    .catch(error => {
+      alert("Registration failed. Try again 🔁");
+      console.error(error);
+    });
+    if (worked == true) {
+       window.location.href = "inner_circle.html";
+    }
 });
 
-// Password reset flow
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -103,20 +82,7 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
       alert("Reset link sent! Check your inbox 💌");
     })
     .catch(error => {
-      console.error("Password reset error:", error.code, error.message);
       alert("Could not send reset link. Try again 🔁");
+      console.error(error);
     });
 });
-
-// Optional: resend verification email
-function resendVerificationEmail() {
-  const user = auth.currentUser;
-  if (user && !user.emailVerified) {
-    sendEmailVerification(user)
-      .then(() => alert("Verification email resent 📩"))
-      .catch(err => {
-        console.error("Resend error:", err.code, err.message);
-        alert("Could not resend email. Try again later.");
-      });
-  }
-}

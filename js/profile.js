@@ -49,7 +49,7 @@ editProfileButton.addEventListener("click", ()=>{
     editProfileImage.src = image.src;
 });
 
-const form = document.querySelector("form");
+const form = document.querySelector("#editProfileBoxForm");
 
 form.addEventListener("submit", async function(e) {
     e.preventDefault();
@@ -100,6 +100,7 @@ inputImage.addEventListener("change",(e)=>{
 
 discardChangesButton.addEventListener("click", (e)=>{
     e.preventDefault();
+    document.getElementById("biography").value = bio.innerHTML;
     editProfileBox.classList.add("d-none");
 });
 
