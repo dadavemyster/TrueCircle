@@ -23,7 +23,7 @@ const db = getDatabase(app);
 // User Database
 function addUsertoDatabase(user) {
     set(ref(db, "users/" + user.uid), {
-        bioImageURL: "img/cow.jpg",
+        bioImageURL: "img/smile.png",
         bioText: "Nothing Yet",
         dateCreated: Date.now(),
         friends: [],
