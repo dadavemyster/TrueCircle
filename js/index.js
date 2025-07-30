@@ -42,12 +42,14 @@ document.querySelector('form').addEventListener('submit', e => {
   signInWithEmailAndPassword(auth, email, password)
     .then(userCred => {
       const user = userCred.user;
+
+      // 🔒 Enforce verification check
       if (user.emailVerified) {
         alert("Welcome to the Circle 🌿");
         window.location.href = "inner_circle.html";
       } else {
-        alert("Please verify your email before logging in 🔒");
-        auth.signOut(); // Block access until verified
+        alert("Please verify your email before logging in 🔐");
+        auth.signOut();  // Force logout if not verified
       }
     })
     .catch(error => {
@@ -55,6 +57,7 @@ document.querySelector('form').addEventListener('submit', e => {
       console.error(error);
     });
 });
+
 
 // Register and send verification email
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
@@ -65,17 +68,18 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
     .then(userCred => {
       const user = userCred.user;
       addUsertoDatabase(user);
-      user.sendEmailVerification()
-        .then(() => {
-          alert("Circle membership created 💫\nCheck your inbox to verify your email ✉️");
-        });
-      // 🚫 No redirect here — wait until they verify and login
+
+      user.sendEmailVerification().then(() => {
+        alert("Circle membership created 💫\nPlease check your inbox and verify your email before logging in.");
+        auth.signOut(); // 🚪 Prevent auto-login until they verify
+      });
     })
     .catch(error => {
       alert("Registration failed. Try again 🔁");
       console.error(error);
     });
 });
+
 
 // Reset password
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
