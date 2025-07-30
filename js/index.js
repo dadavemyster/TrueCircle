@@ -1,6 +1,6 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -19,7 +19,7 @@ const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// User Database
+// ✅ Save new user to Realtime Database
 function addUsertoDatabase(user) {
   set(ref(db, "users/" + user.uid), {
     bioImageURL: "img/cow.jpg",
@@ -33,7 +33,7 @@ function addUsertoDatabase(user) {
   });
 }
 
-// Login with email verification check
+// 🔐 Login with verification enforcement
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
@@ -43,23 +43,21 @@ document.querySelector('form').addEventListener('submit', e => {
     .then(userCred => {
       const user = userCred.user;
 
-      // 🔒 Enforce verification check
       if (user.emailVerified) {
         alert("Welcome to the Circle 🌿");
         window.location.href = "inner_circle.html";
       } else {
         alert("Please verify your email before logging in 🔐");
-        auth.signOut();  // Force logout if not verified
+        signOut(auth); // Kick them out if not verified
       }
     })
     .catch(error => {
+      console.error("Login error:", error.code, error.message);
       alert("Login failed. Check your info ✉️");
-      console.error(error);
     });
 });
 
-
-// Register and send verification email
+// 🆕 Register flow with enhanced error handling
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -67,22 +65,23 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCred => {
       const user = userCred.user;
+      console.log("User created:", user.uid);
+
       addUsertoDatabase(user);
 
       return user.sendEmailVerification();
     })
     .then(() => {
       alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
-      return auth.signOut(); // sign out after sending email
+      return signOut(auth);
     })
     .catch(error => {
-      console.error("Registration error:", error);
-      alert("Whoops — something broke during signup. Please try again or contact support.");
+      console.error("Registration error:", error.code, error.message);
+      alert(`Signup failed ⚠️\n${error.code}: ${error.message}`);
     });
 });
 
-
-// Reset password
+// 🔁 Password reset flow
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -95,17 +94,20 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
       alert("Reset link sent! Check your inbox 💌");
     })
     .catch(error => {
+      console.error("Password reset error:", error.code, error.message);
       alert("Could not send reset link. Try again 🔁");
-      console.error(error);
     });
 });
 
-// Optional: Resend verification email button handler
+// 🔁 Optional: resend verification email
 function resendVerificationEmail() {
   const user = auth.currentUser;
   if (user && !user.emailVerified) {
     user.sendEmailVerification()
       .then(() => alert("Verification email resent 📩"))
-      .catch(err => console.error("Error resending email:", err));
+      .catch(err => {
+        console.error("Resend error:", err.code, err.message);
+        alert("Could not resend email. Try again later.");
+      });
   }
 }
