@@ -67,11 +67,12 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCred => {
       const user = userCred.user;
+
       addUsertoDatabase(user);
 
       user.sendEmailVerification().then(() => {
-        alert("Circle membership created 💫\nPlease check your inbox and verify your email before logging in.");
-        auth.signOut(); // 🚪 Prevent auto-login until they verify
+        alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
+        auth.signOut(); // 🚪 Immediately sign out to block access until verified
       });
     })
     .catch(error => {
