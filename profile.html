@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 	
-<body id="bg" class="d-flex flex-column align-items-center vh-100 bg-light">
+<body id="bg" class="d-flex flex-column align-items-center vh-100 bg-light px-1">
   <!-- Header -->
   <header class="container-fluid py-3 shadow-sm fixed-top">
     <!-- Logo -->
@@ -39,10 +39,14 @@
 
   <!-- Main Content -->
   <!-- Profile image and bio -->
-  <div class="d-flex gap-4 pt-5 px-5 align-items-center col-md-12" style="max-width: 600px;">
+  <div class="d-flex gap-4 pt-5 px-5 align-items-center justify-content-center col-12" style="max-width: 600px;">
     <!-- Need to be added to firebase user data -->
-    <img id="bioImage" class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
-    <text class="col-md-10 text-muted lightdarkchange"><big id="userName"></big><br><br><p id="bio">Mock-up bio - I love frogs and tomatoes, but I super love eating both. Cowboys might be cool too if they had bigger hats.</p></text>
+    <img id="bioImage" class="col-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
+    <div class="col-9 text-muted lightdarkchange">
+        <big id="userName">FakeUser@gmail.com</big>
+        <br><br>
+        <p id="bio" class="text-wrap" style="overflow-wrap: break-word">Mock-up bio - I love frogs and tomatoes, but I super love eating both. Cowboys might be cool too if they had bigger hats.</p>
+    </div>
   </div>
 
   <!-- Sign out and Edit bio-->
@@ -53,14 +57,14 @@
 
 
   <div id="editProfileBox" class="container fixed-top card d-none" style="max-width: 625px; top: 12%;">
-    <form>
+    <form id="editProfileBoxForm">
     <section class="d-flex p-4 gap-4 px-5 pt-5 align-items-center col-md-12">
     
     <img id="editProfileImage" class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
 
     <div class="col-md-10 text-muted lightdarkchange">
         <big id="editBoxUsername">flyfly@gmail.com</big><br><br>
-        <textarea placeholder="Biography" id="biography"></textarea>
+        <textarea rows="3" placeholder="Biography" id="biography" class=""></textarea>
         <br><br>
         <label style="border: 1px solid black; color: black;" class="p-1" for="inputImage"><input id="inputImage" type="file" accept="image/*" hidden>Upload Image</label>
     </div>
@@ -91,12 +95,12 @@
     </section>
   </div>
 
-  <!-- Firebase & Feed Logic Mock-Version -->
+  <!-- Your Posts Feed -->
   <script type="module" src="js/profilePosts.js"></script>
 
   <!-- Activity -->
-  <div id="activityContainer" class="container pt-5">
-    <section class="mx-auto d-none" style="max-width: 700px;">
+  <div id="activityContainer" class="d-none container pt-5">
+    <section class="mx-auto" style="max-width: 700px;">
       <div class="container mt-4">
         <div id="activity"></div>
       </div>
@@ -104,13 +108,26 @@
   </div>
 
   <!-- Friend -->
-  <div id="friendContainer" class="container pt-5">
-    <section class="mx-auto d-none" style="max-width: 700px;">
-      <div class="container mt-4">
-        <div id="activity"></div>
+  <div id="friendContainer" class="d-none container pt-5">
+    <section class="mx-auto" style="max-width: 700px;">
+      <div>
+        <div id="addFriend" class="container card mt-4 p-4">
+            <form id="addFriendForm" class="d-flex gap-4">
+                <input type="text" placeholder="Friend Email" id="friendEmail" class="form-control"></input>
+                <button type="submit" id="addFriendButton" class="btn btn-secondary col-3">Add Friend</button>
+            </form>
+        </div>
+        <div class="container card mt-4 p-4 d-flex flex-column align-items-center">
+            <h1>Your Friends</h1>
+            <div id="friendList"></div>
+        </div>
       </div>
     </section>
   </div>
+
+  <!-- Friends List Tab -->
+  <script type = "module" src="js/addfriend.js"></script>
+  <script type="module" src="js/friends.js"></script>
 
   <!-- Footer -->
   <footer class="text-center px-3 mt-5 pt-3">
