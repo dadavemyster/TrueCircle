@@ -19,9 +19,15 @@ const db = getDatabase();
 
 const username = document.getElementById("userName");
 const bio = document.getElementById("bio");
+const image = document.getElementById("bioImage");
 
 onAuthStateChanged(auth, user => {
     username.innerHTML = user.email;
-    //working on this
-    bio.innerHTML = "work in progress";
+    const userUID = user.uid;
+    const userRef = ref(db, `users/${userUID}`);
+    onValue(userRef, snapshot => {
+        const userInfo = snapshot.val();
+        bio.innerHTML = userInfo.bioText;
+        image.src = userInfo.bioImageURL;
+    });
 });

@@ -39,16 +39,39 @@
 
   <!-- Main Content -->
   <!-- Profile image and bio -->
-  <div class="d-flex col-md-12 d-flex gap-4 pt-5 px-5 align-items-center" style="max-width: 600px;">
+  <div class="d-flex gap-4 pt-5 px-5 align-items-center col-md-12" style="max-width: 600px;">
     <!-- Need to be added to firebase user data -->
-    <img class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
-    <text class="col-md-9 text-muted lightdarkchange"><big id="userName"></big><br><br><p id="bio">Mock-up bio - I love frogs and tomatoes, but I super love eating both. Cowboys might be cool too if they had bigger hats.</p></text>
+    <img id="bioImage" class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
+    <text class="col-md-10 text-muted lightdarkchange"><big id="userName"></big><br><br><p id="bio">Mock-up bio - I love frogs and tomatoes, but I super love eating both. Cowboys might be cool too if they had bigger hats.</p></text>
   </div>
 
   <!-- Sign out and Edit bio-->
   <div class="col-md-12 d-flex gap-5 pt-5" style="max-width: 600px;">
     <button id="editProfile" class="flex-fill btn btn-warning fs-2">Edit Profile</button>
     <button id="signOut" class="flex-fill btn btn-danger fs-2">Sign Out</button>
+  </div>
+
+
+  <div id="editProfileBox" class="container fixed-top card d-none" style="max-width: 625px; top: 12%;">
+    <form>
+    <section class="d-flex p-4 gap-4 px-5 pt-5 align-items-center col-md-12">
+    
+    <img id="editProfileImage" class="col-md-2 rounded-circle" src="img/frog2.jpg" alt="profileImage" style="width:150px; height:150px;">
+
+    <div class="col-md-10 text-muted lightdarkchange">
+        <big id="editBoxUsername">flyfly@gmail.com</big><br><br>
+        <textarea placeholder="Biography" id="biography"></textarea>
+        <br><br>
+        <label style="border: 1px solid black; color: black;" class="p-1" for="inputImage"><input id="inputImage" type="file" accept="image/*" hidden>Upload Image</label>
+    </div>
+
+    </section>
+    <div class="d-flex justify-content-center gap-5">
+        <button id="saveChanges" type="submit" class="btn btn-primary col-5">Save Changes</button>
+        <button id="discardChanges" type="button" class="btn btn-warning col-5">Discard Changes</button>
+    </div>
+    <br>
+    </form>
   </div>
 
   <!--Posts & Activity tabs-->
