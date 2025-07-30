@@ -28,8 +28,8 @@ onAuthStateChanged(auth, (user) => {
         snapshot.forEach(child => {
             get(ref(db, `users/${child.key}`)).then(snapshot => {
                 const div = document.createElement("div");
-                div.className ="d-flex gap-4 p-3 px-5 col-12 card flex-row align-items-center" 
-                div.style="max-width: 600px; border:1px solid black";
+                div.className ="d-flex gap-4 p-3 px-5 col-12  flex-row align-items-center" 
+                div.style="max-width: 600px;";
                 div.innerHTML = 
                 `
                 <img id="bioImage" class="col-2 rounded-circle" src="${snapshot.child("bioImageURL").val()}" alt="profileImage" style="width:150px; height:150px;">
