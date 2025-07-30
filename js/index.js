@@ -67,17 +67,17 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCred => {
       const user = userCred.user;
-
       addUsertoDatabase(user);
 
-      user.sendEmailVerification().then(() => {
-        alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
-        auth.signOut(); // 🚪 Immediately sign out to block access until verified
-      });
+      return user.sendEmailVerification();
+    })
+    .then(() => {
+      alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
+      return auth.signOut(); // sign out after sending email
     })
     .catch(error => {
-      alert("Registration failed. Try again 🔁");
-      console.error(error);
+      console.error("Registration error:", error);
+      alert("Whoops — something broke during signup. Please try again or contact support.");
     });
 });
 
