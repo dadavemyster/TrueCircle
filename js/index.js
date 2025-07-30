@@ -21,18 +21,19 @@ const db = getDatabase(app);
 
 // User Database
 function addUsertoDatabase(user) {
-    set(ref(db, "users/" + user.uid), {
-        bioImageURL: "img/cow.jpg",
-        bioText: "Nothing Yet",
-        dateCreated: Date.now(),
-        friends: [],
-        posts: [],
-        postsUpvoted: [],
-        postsDownvoted: [],
-        email: user.email
-    });
+  set(ref(db, "users/" + user.uid), {
+    bioImageURL: "img/cow.jpg",
+    bioText: "Nothing Yet",
+    dateCreated: Date.now(),
+    friends: [],
+    posts: [],
+    postsUpvoted: [],
+    postsDownvoted: [],
+    email: user.email
+  });
 }
 
+// Login with email verification check
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
@@ -40,8 +41,14 @@ document.querySelector('form').addEventListener('submit', e => {
 
   signInWithEmailAndPassword(auth, email, password)
     .then(userCred => {
-      alert("Welcome to the Circle 🌿");
-      window.location.href = "inner_circle.html";
+      const user = userCred.user;
+      if (user.emailVerified) {
+        alert("Welcome to the Circle 🌿");
+        window.location.href = "inner_circle.html";
+      } else {
+        alert("Please verify your email before logging in 🔒");
+        auth.signOut(); // Block access until verified
+      }
     })
     .catch(error => {
       alert("Login failed. Check your info ✉️");
@@ -49,27 +56,28 @@ document.querySelector('form').addEventListener('submit', e => {
     });
 });
 
+// Register and send verification email
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
 
-  let worked = false;
-
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCred => {
-      addUsertoDatabase(userCred.user)
-      alert("Circle membership created 💫");
-      worked = true;
+      const user = userCred.user;
+      addUsertoDatabase(user);
+      user.sendEmailVerification()
+        .then(() => {
+          alert("Circle membership created 💫\nCheck your inbox to verify your email ✉️");
+        });
+      // 🚫 No redirect here — wait until they verify and login
     })
     .catch(error => {
       alert("Registration failed. Try again 🔁");
       console.error(error);
     });
-    if (worked == true) {
-       window.location.href = "inner_circle.html";
-    }
 });
 
+// Reset password
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -86,3 +94,13 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
       console.error(error);
     });
 });
+
+// Optional: Resend verification email button handler
+function resendVerificationEmail() {
+  const user = auth.currentUser;
+  if (user && !user.emailVerified) {
+    user.sendEmailVerification()
+      .then(() => alert("Verification email resent 📩"))
+      .catch(err => console.error("Error resending email:", err));
+  }
+}
