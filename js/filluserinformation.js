@@ -20,9 +20,11 @@ const db = getDatabase();
 const username = document.getElementById("userName");
 const bio = document.getElementById("bio");
 const image = document.getElementById("bioImage");
+const editBoxUsername = document.getElementById("editBoxUsername");
 
 onAuthStateChanged(auth, user => {
     username.innerHTML = user.email;
+    editBoxUsername.innerHTML = user.email;
     const userUID = user.uid;
     const userRef = ref(db, `users/${userUID}`);
     onValue(userRef, snapshot => {
