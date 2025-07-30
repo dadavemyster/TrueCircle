@@ -1,7 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -63,28 +71,20 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   const password = document.getElementById('password').value.trim();
 
   createUserWithEmailAndPassword(auth, email, password)
-    .then(userCred => {
-      const user = userCred.user;
-      console.log("✅ User created:", user.uid);
-      addUsertoDatabase(user);
+  .then(userCred => {
+    const user = userCred.user;
+    addUsertoDatabase(user);
 
-      return user.sendEmailVerification()
-        .then(() => {
-          console.log("📧 Verification email sent");
-          alert("Circle membership created 💫\nWe've emailed your verification link — please check it before logging in.");
-          return signOut(auth);
-        })
-        .catch(emailErr => {
-          console.error("❌ Email verification failed:", emailErr.code, emailErr.message);
-          alert(`Verification failed ⚠️\n${emailErr.code}: ${emailErr.message}`);
-          // Optional: Sign out anyway so they can't log in
-          return signOut(auth);
-        });
-    })
-    .catch(regErr => {
-      console.error("❌ Registration failed:", regErr.code, regErr.message);
-      alert(`Signup failed ⚠️\n${regErr.code}: ${regErr.message}`);
-    });
+    return sendEmailVerification(user);
+  })
+  .then(() => {
+    alert("Verification sent! Check your inbox 📧");
+    return signOut(auth);
+  })
+  .catch(error => {
+    console.error("Signup error:", error.code, error.message);
+    alert(`Signup failed: ${error.message}`);
+  });
 });
 
 // 🔁 Password reset flow
@@ -109,7 +109,7 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
 function resendVerificationEmail() {
   const user = auth.currentUser;
   if (user && !user.emailVerified) {
-    user.sendEmailVerification()
+    sendEmailVerification(user)
       .then(() => alert("Verification email resent 📩"))
       .catch(err => {
         console.error("Resend error:", err.code, err.message);
