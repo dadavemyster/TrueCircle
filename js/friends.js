@@ -19,12 +19,11 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 const feed = document.getElementById("friendList");
-feed.innerHTML = "";
 onAuthStateChanged(auth, (user) => {
-    
     const userUID = user.uid;
 
     onValue(ref(db, `users/${userUID}/friends`), snapshot => {
+        feed.innerHTML = "";
         snapshot.forEach(child => {
             get(ref(db, `users/${child.key}`)).then(snapshot => {
                 const div = document.createElement("div");
