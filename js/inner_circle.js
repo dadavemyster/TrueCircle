@@ -19,23 +19,40 @@ const db = getDatabase(app);
 const feed = document.getElementById("feed");
 const auth = getAuth(app);
 
+// Mood Filter Logic
+const moodFilter = document.getElementById("moodFilter");
+let currentMoodFilter = "";
+if (moodFilter) {
+  moodFilter.addEventListener("change", function () {
+    currentMoodFilter = this.value;
+    renderPosts();
+  });
+}
+
+let allPosts = [];
+
 onValue(ref(db, "posts"), snapshot => {
-  const posts = [];
+  allPosts = [];
   snapshot.forEach(child => {
     const post = child.val();
     post.key = child.key;
-    posts.push(post);
+    allPosts.push(post);
   });
+  renderPosts();
+});
 
+function renderPosts() {
   const user = auth.currentUser;
 
-  posts.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const posts = allPosts
+    .filter(post => post.circle === "inner")
+    .filter(post => !shouldHidePost(post))
+    .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
   feed.innerHTML = "";
 
   posts.forEach(post => {
-    if (shouldHidePost(post)) return;
-    if (post.circle !== "inner") return;
-
     const scorePercent = (post.score * 100).toFixed(1);
     const scoreClass = post.score >= 0.75 ? "score-high"
                      : post.score >= 0.5 ? "score-medium"
@@ -59,7 +76,7 @@ onValue(ref(db, "posts"), snapshot => {
     const postAge = formatAge(ageMillis);
     const div = document.createElement("div");
     div.className = "card mb-3 p-3 shadow-sm";
-    
+
     div.innerHTML = `
       <p class="mb-2">${post.content}</p>
       ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
@@ -87,14 +104,14 @@ onValue(ref(db, "posts"), snapshot => {
 
     feed.appendChild(div);
 
-    if (user.email != post.email) {
-        let deleteButton = document.getElementsByClassName(post.email);
-        for (let i = 0; i < deleteButton.length; i++) {
-            deleteButton[i].classList.add("d-none");
-        }
+    if (user && user.email !== post.email) {
+      let deleteButton = document.getElementsByClassName(post.email);
+      for (let i = 0; i < deleteButton.length; i++) {
+        deleteButton[i].classList.add("d-none");
+      }
     }
   });
-});
+}
 
 function vote(postId, type) {
   const postRef = ref(db, `posts/${postId}`);
@@ -118,7 +135,6 @@ function vote(postId, type) {
     });
   }, { onlyOnce: true });
 }
-
 
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
