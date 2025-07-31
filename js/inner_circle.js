@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { shouldHidePost } from './filterLowScorePosts.js';
+
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
   authDomain: "true-circle-gui2.firebaseapp.com",
@@ -26,13 +27,15 @@ onValue(ref(db, "posts"), snapshot => {
     posts.push(post);
   });
 
-    const user = auth.currentUser;
+  const user = auth.currentUser;
 
   posts.sort((a, b) => (b.score || 0) - (a.score || 0));
   feed.innerHTML = "";
 
   posts.forEach(post => {
     if (shouldHidePost(post)) return;
+    if (post.circle !== "inner") return;
+
     const scorePercent = (post.score * 100).toFixed(1);
     const scoreClass = post.score >= 0.75 ? "score-high"
                      : post.score >= 0.5 ? "score-medium"
@@ -60,6 +63,7 @@ onValue(ref(db, "posts"), snapshot => {
     div.innerHTML = `
       <p class="mb-2">${post.content}</p>
       ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
+      ${post.mood ? `<p class="text-muted small">🧠 Mood: <strong>${post.mood}</strong></p>` : ""}
       <div class="d-flex align-items-center justify-content-between mb-1">
         <div>
           <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>

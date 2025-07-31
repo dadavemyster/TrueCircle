@@ -4,7 +4,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
   authDomain: "true-circle-gui2.firebaseapp.com",
@@ -22,7 +21,6 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-
 const form = document.querySelector("form");
 
 form.addEventListener("submit", async function(e) {
@@ -31,7 +29,8 @@ form.addEventListener("submit", async function(e) {
   const user = auth.currentUser;
   const content = document.getElementById("postContent").value.trim();
   const imageFile = document.getElementById("postImage").files[0];
-  const circleType = document.getElementById("circleType").value; // ← Add this
+  const circleType = document.getElementById("circleType").value;
+  const mood = document.getElementById("postMood").value; // ← New: Mood
 
   if (!content) return alert("Let’s fill the circle with something first 🌱");
 
@@ -50,7 +49,8 @@ form.addEventListener("submit", async function(e) {
     downvotes: 0,
     score: 0,
     email: user.email,
-    circle: circleType // ← This is critical!
+    circle: circleType,
+    mood: mood // ← Store mood in Firebase
   });
 
   form.reset();
