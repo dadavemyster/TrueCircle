@@ -66,6 +66,7 @@ function renderPosts() {
       const mins = Math.floor(secs / 60);
       const hours = Math.floor(mins / 60);
       const days = Math.floor(hours / 24);
+
       if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
       if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
       if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
@@ -91,8 +92,8 @@ function renderPosts() {
       </div>
     `;
 
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up", user.email));
-    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down", user.email));
+    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
+    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
     div.querySelector(".delete").addEventListener("click", () => {
       const confirmDelete = confirm("Delete this post?");
       if (confirmDelete) {
@@ -113,32 +114,16 @@ function renderPosts() {
 }
 
 function vote(postId, type) {
-  const user = auth.currentUser;
-  if (!user) return;
-
   const postRef = ref(db, `posts/${postId}`);
   onValue(postRef, snapshot => {
     const post = snapshot.val();
     if (!post) return;
 
-    let votes = post.votes || {};
     let up = post.upvotes || 0;
     let down = post.downvotes || 0;
-    const prevVote = votes[user.email];
 
-    // No change if voting the same
-    if (prevVote === type) return;
-
-    // Remove previous vote
-    if (prevVote === "up") up--;
-    if (prevVote === "down") down--;
-
-    // Add new vote
     if (type === "up") up++;
     if (type === "down") down++;
-
-    // Update vote record
-    votes[user.email] = type;
 
     const total = up + down;
     const newScore = total ? up / total : 0;
@@ -146,8 +131,7 @@ function vote(postId, type) {
     update(postRef, {
       upvotes: up,
       downvotes: down,
-      score: newScore,
-      votes: votes
+      score: newScore
     });
   }, { onlyOnce: true });
 }
