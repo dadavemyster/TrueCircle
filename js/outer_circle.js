@@ -15,34 +15,43 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const feed = document.getElementById("feed");
 const auth = getAuth(app);
-
-// Mood filter logic
+const feed = document.getElementById("feed");
 const moodFilter = document.getElementById("moodFilter");
+
 let currentMoodFilter = "";
+let allPosts = [];
+let currentUser = null;
+
+// Mood filter dropdown handler
 if (moodFilter) {
   moodFilter.addEventListener("change", function () {
     currentMoodFilter = this.value;
+    if (currentUser) renderPosts();
+  });
+}
+
+// Track auth state and store current user
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUser = user;
+    loadPosts(); // only load posts once user is confirmed
+  }
+});
+
+function loadPosts() {
+  onValue(ref(db, "posts"), snapshot => {
+    allPosts = [];
+    snapshot.forEach(child => {
+      const post = child.val();
+      post.key = child.key;
+      allPosts.push(post);
+    });
     renderPosts();
   });
 }
 
-let allPosts = [];
-
-onValue(ref(db, "posts"), snapshot => {
-  allPosts = [];
-  snapshot.forEach(child => {
-    const post = child.val();
-    post.key = child.key;
-    allPosts.push(post);
-  });
-  renderPosts();
-});
-
 function renderPosts() {
-  const user = auth.currentUser;
-
   const posts = allPosts
     .filter(post => post.circle === "outer")
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
@@ -55,23 +64,12 @@ function renderPosts() {
     const scoreClass = post.score >= 0.75 ? "score-high"
                      : post.score >= 0.5 ? "score-medium"
                      : "score-low";
+
     const now = Date.now();
     const postTime = post.timestamp || now;
     const ageMillis = now - postTime;
-
-    function formatAge(ms) {
-      const secs = Math.floor(ms / 1000);
-      const mins = Math.floor(secs / 60);
-      const hours = Math.floor(mins / 60);
-      const days = Math.floor(hours / 24);
-
-      if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
-      if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-      if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
-      return `Just now`;
-    }
-
     const postAge = formatAge(ageMillis);
+
     const div = document.createElement("div");
     div.className = "card mb-3 p-3 shadow-sm";
 
@@ -90,8 +88,9 @@ function renderPosts() {
       </div>
     `;
 
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
-    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up", currentUser.email));
+    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down", currentUser.email));
+
     div.querySelector(".delete").addEventListener("click", () => {
       const confirmDelete = confirm("Delete this post?");
       if (confirmDelete) {
@@ -102,7 +101,7 @@ function renderPosts() {
 
     feed.appendChild(div);
 
-    if (user && user.email != post.email) {
+    if (currentUser && currentUser.email !== post.email) {
       let deleteButton = document.getElementsByClassName(post.email);
       for (let i = 0; i < deleteButton.length; i++) {
         deleteButton[i].classList.add("d-none");
@@ -111,17 +110,28 @@ function renderPosts() {
   });
 }
 
-function vote(postId, type) {
+function vote(postId, type, email) {
+  if (!email) return;
+
   const postRef = ref(db, `posts/${postId}`);
   onValue(postRef, snapshot => {
     const post = snapshot.val();
     if (!post) return;
 
+    let votes = post.votes || {};
     let up = post.upvotes || 0;
     let down = post.downvotes || 0;
+    const prevVote = votes[email];
+
+    if (prevVote === type) return;
+
+    if (prevVote === "up") up--;
+    if (prevVote === "down") down--;
 
     if (type === "up") up++;
     if (type === "down") down++;
+
+    votes[email] = type;
 
     const total = up + down;
     const newScore = total ? up / total : 0;
@@ -129,14 +139,20 @@ function vote(postId, type) {
     update(postRef, {
       upvotes: up,
       downvotes: down,
-      score: newScore
+      score: newScore,
+      votes: votes
     });
   }, { onlyOnce: true });
 }
 
-function openComments() {
-  document.getElementById('commentOverlay').classList.remove('d-none');
-}
-function closeComments() {
-  document.getElementById('commentOverlay').classList.add('d-none');
+function formatAge(ms) {
+  const secs = Math.floor(ms / 1000);
+  const mins = Math.floor(secs / 60);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
+  return `Just now`;
 }
