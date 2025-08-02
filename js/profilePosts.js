@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -27,6 +27,8 @@ onValue(ref(db, "posts"), snapshot => {
   });
 
     const user = auth.currentUser;
+    const userUID = user.uid;
+    const userRef = ref(db, `users/${userUID}`);
 
   posts.sort((a, b) => (b.score || 0) - (a.score || 0));
   feed.innerHTML = "";
@@ -51,7 +53,7 @@ onValue(ref(db, "posts"), snapshot => {
       if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
       return `Just now`;
     }
-
+    
     const postAge = formatAge(ageMillis);
     const div = document.createElement("div");
     div.className = "card mb-3 p-3 shadow-sm";
@@ -82,8 +84,59 @@ onValue(ref(db, "posts"), snapshot => {
       </div>
     `;
 
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
-    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+    get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+            div.querySelector(".upvote").classList.add("active");
+        }
+        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+            div.querySelector(".downvote").classList.add("active");
+        }
+    });
+
+    div.querySelector(".upvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "down");
+            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            } else {
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            }
+        });
+    });
+
+    div.querySelector(".downvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "up");
+            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            } else {
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            }
+        });
+    });
+    
     div.querySelector(".delete").addEventListener("click", () => {
       const confirmDelete = confirm("Delete this post?");
       if (confirmDelete) {
