@@ -10,67 +10,51 @@
 </head>
 	
 <body id="bg" class="d-flex flex-column align-items-center vh-100 bg-light">
-  
-  <!-- Header -->
-  <header class="container-fluid py-3 shadow-sm fixed-top">
-    <!-- Logo -->
-    <div class="row align-items-center px-4">
-      <div class="col-md-3 text-md-start text-center">
-        <a href="index.html" class="text-decoration-none text-dark">
-          <h2 class="fw-bold mb-0">True Circle</h2>
-        </a>
-      </div>
+  <div id="appContent" style="display: none; padding-top: 100px;">
 
-
-      <!-- Navigation Bar -->
-      <div class="col-md-9 text-md-end text-center mt-2 mt-md-0">
-        <nav>
-          <a id="nav-inner" href="inner_circle.html" class="mx-2 text-decoration-none">Inner Circle</a>
-          <a id="nav-outer" href="outer_circle.html" class="mx-2 text-decoration-none">Outer Circle</a>
-          <a id="nav-new" href="new_post.html" class="mx-2 text-decoration-none">New Post</a>
-          <img id="lightdark" src="img/sun.png" style="height: 27px; width: 27px;" onclick="lightdark()"></button>
-          <a id="nav-profile" href="profile.html" class="mx-2 text-decoration-none">Profile</a>
-          <img id="iconProfileImage" src="img/smile.png" style="height: 27px; width: 27px;" class="rounded-circle">
-        </nav>
+    <!-- Header -->
+    <header class="container-fluid py-3 shadow-sm fixed-top">
+      <!-- Logo -->
+      <div class="row align-items-center px-4">
+        <div class="col-md-3 text-md-start text-center">
+          <a href="index.html" class="text-decoration-none text-dark">
+            <h2 class="fw-bold mb-0">True Circle</h2>
+          </a>
+        </div>
       </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="text-center">
+      <p class="lead">Built for Truth.<br>Wired for Connection.</p>
     </div>
-  </header>
-	
 
-  <!-- Main Content -->
-  <div class="text-center">
-    <p class="lead">Built for Truth.<br>Wired for Connection.</p>
+    <div class="card p-4 shadow my-5" style="width: 100%; max-width: 400px;">
+      <form>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" placeholder="Enter email" />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" placeholder="Enter password" />
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">Login</button>
+          <button type="button" class="btn btn-outline-secondary">Register</button>
+          <button type="button" id="googleLogin" class="btn btn-danger mt-2">Login with Google</button>
+        </div>
+        <div class="text-center mt-3">
+          <a href="#" id="resetPasswordLink" class="text-muted">Forgot password?</a>
+        </div>
+      </form>
+    </div>
+
+    <footer class="mt-4 large text-center px-3 lightdarkchange">
+      <h2>A UML GUI II Project by</h2>David Boulos<br>Kevin Kuang<br>Kelvin Lee<br>Senny Lu<br><br><br><br>
+    </footer>
   </div>
 
-  <div class="card p-4 shadow my-5" style="width: 100%; max-width: 400px;">
-    <form>
-      <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" placeholder="Enter email" />
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" placeholder="Enter password" />
-      </div>
-      <div class="d-grid gap-2">
-        <button type="submit" class="btn btn-primary">Login</button>
-        <button type="button" class="btn btn-outline-secondary">Register</button>
-        <button type="button" id="googleLogin" class="btn btn-danger mt-2">Login with Google</button>
-      </div>
-      <div class="text-center mt-3">
-        <a href="#" id="resetPasswordLink" class="text-muted">Forgot password?</a>
-      </div>
-    </form>
-  </div>
-
-</div>
-
-  <footer class="mt-4 large text-center px-3 lightdarkchange">
-    <h2>A UML GUI II Project by</h2>David Boulos<br>Kevin Kuang<br>Kelvin Lee<br>Senny Lu<br><br><br><br>
-  </footer>
-  <footer class="text-center px-3 mt-5 pt-3">
-    <small class="text-muted lightdarkchange"> © Copyright True Circle 2025</small>
-  </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 	<!-- JS Scripts -->
   <script type="module" src= "js/profilepictureicon.js"></script>
