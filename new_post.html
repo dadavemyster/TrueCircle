@@ -39,7 +39,7 @@
   <main class="container mt-5 pt-5">
     <section class="card p-4 shadow mx-auto" style="max-width: 600px;">
       <h3 class="mb-4 text-center">What's on your mind?</h3>
-
+      
       <form>
         <div class="mb-3">
           <label for="postContent" class="form-label">Your Post</label>
@@ -58,7 +58,17 @@
           <label for="postImage" class="form-label">Attach an image (optional)</label>
           <input type="file" class="form-control" id="postImage" accept="image/*">
         </div>
-
+<div class="mb-3">
+  <label for="postMood" class="form-label">Mood</label>
+  <select id="postMood" class="form-select">
+    <option value="">Select a mood</option>
+    <option value="Happy">😊 Happy</option>
+    <option value="Sad">😢 Sad</option>
+    <option value="Angry">😡 Angry</option>
+    <option value="Chill">😎 Chill</option>
+    <option value="Excited">🤩 Excited</option>
+  </select>
+</div>
         <div class="d-grid gap-2">
           <button type="submit" class="btn btn-primary">Publish</button>
         </div>

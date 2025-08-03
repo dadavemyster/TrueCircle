@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -18,17 +18,38 @@ const db = getDatabase(app);
 const feed = document.getElementById("feed");
 const auth = getAuth(app);
 
+// Mood filter logic
+const moodFilter = document.getElementById("moodFilter");
+let currentMoodFilter = "";
+if (moodFilter) {
+  moodFilter.addEventListener("change", function () {
+    currentMoodFilter = this.value;
+    renderPosts();
+  });
+}
+
+let allPosts = [];
+
 onValue(ref(db, "posts"), snapshot => {
-  const posts = [];
+  allPosts = [];
   snapshot.forEach(child => {
     const post = child.val();
     post.key = child.key;
-    posts.push(post);
+    allPosts.push(post);
   });
+  renderPosts();
+});
 
-    const user = auth.currentUser;
+function renderPosts() {
+  const user = auth.currentUser;
+  const userUID = user.uid;
+  const userRef = ref(db, `users/${userUID}`);
 
-  posts.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const posts = allPosts
+    .filter(post => post.circle === "outer")
+    .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
   feed.innerHTML = "";
 
   posts.forEach(post => {
@@ -55,10 +76,11 @@ onValue(ref(db, "posts"), snapshot => {
     const postAge = formatAge(ageMillis);
     const div = document.createElement("div");
     div.className = "card mb-3 p-3 shadow-sm";
-    
+
     div.innerHTML = `
       <p class="mb-2">${post.content}</p>
       ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
+      ${post.mood ? `<p class="text-muted small">🧠 Mood: <strong>${post.mood}</strong></p>` : ""}
       <div class="d-flex align-items-center justify-content-between mb-1">
         <div>
           <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
@@ -70,8 +92,59 @@ onValue(ref(db, "posts"), snapshot => {
       </div>
     `;
 
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
-    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+
+    get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+            div.querySelector(".upvote").classList.add("active");
+        }
+        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+            div.querySelector(".downvote").classList.add("active");
+        }
+    });
+
+    div.querySelector(".upvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "down");
+            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            } else {
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            }
+        });
+    });
+
+    div.querySelector(".downvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "up");
+            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            } else {
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            }
+        });
+    });
     div.querySelector(".delete").addEventListener("click", () => {
       const confirmDelete = confirm("Delete this post?");
       if (confirmDelete) {
@@ -82,15 +155,14 @@ onValue(ref(db, "posts"), snapshot => {
 
     feed.appendChild(div);
 
-    if (user.email != post.email) {
-        let deleteButton = document.getElementsByClassName(post.email);
-        for (let i = 0; i < deleteButton.length; i++) {
-            deleteButton[i].classList.add("d-none");
-        }
+    if (user && user.email != post.email) {
+      let deleteButton = document.getElementsByClassName(post.email);
+      for (let i = 0; i < deleteButton.length; i++) {
+        deleteButton[i].classList.add("d-none");
+      }
     }
-    if (post.circle !== "outer") return;
   });
-});
+}
 
 function vote(postId, type) {
   const postRef = ref(db, `posts/${postId}`);
@@ -114,7 +186,6 @@ function vote(postId, type) {
     });
   }, { onlyOnce: true });
 }
-
 
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
