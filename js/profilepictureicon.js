@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -18,13 +17,26 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-const iconChange = document.getElementById("iconProfileImage");
-
 onAuthStateChanged(auth, user => {
-    onValue(ref(db, "users"), snapshot => {
-        const user = auth.currentUser;
-        const userUID = user.uid;
-        const userSnapshot = snapshot.child(userUID);
-        iconChange.src = userSnapshot.child("bioImageURL").val();
-    });
+  if (!user) return;
+
+  const userUID = user.uid;
+  const userRef = ref(db, "users/" + userUID + "/bioImageURL");
+  const iconContainer = document.getElementById("iconProfileContainer");
+
+  get(userRef).then(snapshot => {
+    const imageURL = snapshot.val();
+
+    if (imageURL && imageURL !== "img/smile.png") {
+      iconContainer.innerHTML = `
+        <a href="profile.html">
+          <img src="${imageURL}" style="height: 35px; width: 35px;" class="rounded-circle" />
+        </a>
+      `;
+    } else {
+      iconContainer.innerHTML = `
+        <a href="profile.html" class="mx-2 text-decoration-none">Profile</a>
+      `;
+    }
+  });
 });
