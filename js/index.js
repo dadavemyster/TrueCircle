@@ -63,10 +63,21 @@ document.querySelector('form').addEventListener('submit', e => {
       const user = userCred.user;
 
       if (user.emailVerified) {
-        alert("Welcome to the Circle 🌿");
+        alert("Welcome to the Circle!");
         window.location.href = "inner_circle.html";
       } else {
-        alert("Please verify your email before logging in 🔐");
+        // Let them know verification is needed
+        if (confirm("Your email isn't verified yet. Would you like to resend the verification email?")) {
+          sendEmailVerification(user)
+            .then(() => {
+              alert("Verification email sent! 📩 Check your inbox.");
+            })
+            .catch(error => {
+              console.error("Verification resend error:", error.code, error.message);
+              alert("Something went wrong while resending. Try again later. 🚧");
+            });
+        }
+
         signOut(auth);
       }
     })
