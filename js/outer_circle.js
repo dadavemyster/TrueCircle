@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -15,10 +16,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
 const feed = document.getElementById("feed");
 const auth = getAuth(app);
 
-// Mood filter logic
 const moodFilter = document.getElementById("moodFilter");
 let currentMoodFilter = "";
 if (moodFilter) {
@@ -85,6 +86,13 @@ function renderPosts() {
         <div>
           <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
           <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
+          <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
+          <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
+          <div class="reaction-canvas-container d-none mt-2">
+            <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
+            <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
+          </div>
+          <div class="reaction-gallery mt-2 d-none"></div>
           <button class="btn btn-sm btn-outline-secondary me-2 delete ${post.email}">🗑️</button>
           <small class="${scoreClass}">Score: ${scorePercent}%</small>
         </div>
@@ -92,73 +100,112 @@ function renderPosts() {
       </div>
     `;
 
+    const canvasContainer = div.querySelector(".reaction-canvas-container");
+    const canvas = canvasContainer.querySelector("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let drawing = false;
+
+    div.querySelector(".add-reaction").addEventListener("click", () => {
+      canvasContainer.classList.toggle("d-none");
+    });
+
+    canvas.onmousedown = () => drawing = true;
+    canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
+    canvas.onmousemove = e => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#000";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    };
+
+    div.querySelector(".submit-reaction").addEventListener("click", async () => {
+      const dataURL = canvas.toDataURL("image/png");
+      const blob = await (await fetch(dataURL)).blob();
+      const storageRef = sRef(storage, `reactions-images/${post.key}/${Date.now()}.png`);
+      await uploadBytes(storageRef, blob);
+      alert("Reaction uploaded!");
+      canvasContainer.classList.add("d-none");
+    });
+
+    div.querySelector(".see-reactions").addEventListener("click", async () => {
+      const gallery = div.querySelector(".reaction-gallery");
+      gallery.classList.toggle("d-none");
+      if (!gallery.classList.contains("d-none")) {
+        gallery.innerHTML = "Loading...";
+        const listRef = sRef(storage, `reactions-images/${post.key}/`);
+        const result = await listAll(listRef);
+        gallery.innerHTML = "";
+        for (const file of result.items) {
+          const url = await getDownloadURL(file);
+          const img = document.createElement("img");
+          img.src = url;
+          img.style.width = "100px";
+          img.style.marginRight = "5px";
+          img.classList.add("rounded", "shadow-sm");
+          gallery.appendChild(img);
+        }
+      }
+    });
 
     get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-            div.querySelector(".upvote").classList.add("active");
-        }
-        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-            div.querySelector(".downvote").classList.add("active");
-        }
+      if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+        div.querySelector(".upvote").classList.add("active");
+      }
+      if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+        div.querySelector(".downvote").classList.add("active");
+      }
     });
 
     div.querySelector(".upvote").addEventListener("click", () => {
-        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
-                remove(userPostRef);
-                vote(post.key, "down");
-            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
-                remove(userPostRef);
-                update(userRef, {
-                    [`upvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "up");
-            } else {
-                update(userRef, {
-                    [`upvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "up");
-            }
-        });
+      get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+          remove(ref(db, `users/${userUID}/upvotedPosts/${post.key}`));
+          vote(post.key, "down");
+        } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+          remove(ref(db, `users/${userUID}/downvotedPosts/${post.key}`));
+          update(userRef, { [`upvotedPosts/${post.key}`]: true });
+          vote(post.key, "up");
+        } else {
+          update(userRef, { [`upvotedPosts/${post.key}`]: true });
+          vote(post.key, "up");
+        }
+      });
     });
 
     div.querySelector(".downvote").addEventListener("click", () => {
-        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
-                remove(userPostRef);
-                vote(post.key, "up");
-            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
-                remove(userPostRef);
-                update(userRef, {
-                    [`downvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "down");
-            } else {
-                update(userRef, {
-                    [`downvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "down");
-            }
-        });
+      get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+          remove(ref(db, `users/${userUID}/downvotedPosts/${post.key}`));
+          vote(post.key, "up");
+        } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+          remove(ref(db, `users/${userUID}/upvotedPosts/${post.key}`));
+          update(userRef, { [`downvotedPosts/${post.key}`]: true });
+          vote(post.key, "down");
+        } else {
+          update(userRef, { [`downvotedPosts/${post.key}`]: true });
+          vote(post.key, "down");
+        }
+      });
     });
+
     div.querySelector(".delete").addEventListener("click", () => {
-      const confirmDelete = confirm("Delete this post?");
-      if (confirmDelete) {
-        const postRef = ref(db, `posts/${post.key}`);
-        remove(postRef);
+      if (confirm("Delete this post?")) {
+        remove(ref(db, `posts/${post.key}`));
       }
     });
 
     feed.appendChild(div);
 
-    if (user && user.email != post.email) {
-      let deleteButton = document.getElementsByClassName(post.email);
-      for (let i = 0; i < deleteButton.length; i++) {
-        deleteButton[i].classList.add("d-none");
+    if (user && user.email !== post.email) {
+      const deleteButtons = document.getElementsByClassName(post.email);
+      for (let i = 0; i < deleteButtons.length; i++) {
+        deleteButtons[i].classList.add("d-none");
       }
     }
   });
