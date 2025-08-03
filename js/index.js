@@ -9,9 +9,9 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   GoogleAuthProvider, 
-  signInWithPopup 
+  signInWithPopup,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIJs2JgPihGJHijJ7gO7SecxoKb2LCgrg",
@@ -29,18 +29,27 @@ const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
+// Redirect if already logged in
+onAuthStateChanged(auth, (user) => {
+  if (user && user.emailVerified) {
+    window.location.href = "inner_circle.html";
+  } else {
+    document.getElementById("appContent").style.display = "block";
+  }
+});
+
 // User Database
 function addUsertoDatabase(user) {
-    set(ref(db, "users/" + user.uid), {
-        bioImageURL: "img/smile.png",
-        bioText: "Nothing Yet",
-        dateCreated: Date.now(),
-        friends: [],
-        posts: [],
-        postsUpvoted: [],
-        postsDownvoted: [],
-        email: user.email
-    });
+  set(ref(db, "users/" + user.uid), {
+    bioImageURL: "img/smile.png",
+    bioText: "Nothing Yet",
+    dateCreated: Date.now(),
+    friends: [],
+    posts: [],
+    postsUpvoted: [],
+    postsDownvoted: [],
+    email: user.email
+  });
 }
 
 // Login with verification enforcement
@@ -58,7 +67,7 @@ document.querySelector('form').addEventListener('submit', e => {
         window.location.href = "inner_circle.html";
       } else {
         alert("Please verify your email before logging in 🔐");
-        signOut(auth); // Kick them out if not verified
+        signOut(auth);
       }
     })
     .catch(error => {
@@ -73,22 +82,20 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
   const password = document.getElementById('password').value.trim();
 
   createUserWithEmailAndPassword(auth, email, password)
-  .then(userCred => {
-    const user = userCred.user;
-    console.log("✅ User created:", user.uid);
-    addUsertoDatabase(user);
-
-    // Modular way to send email verification
-    return sendEmailVerification(user);
-  })
-  .then(() => {
-    alert("Verification email sent ✅\nCheck your inbox before logging in.");
-    return signOut(auth);
-  })
-  .catch(error => {
-    console.error("❌ Registration error:", error.code, error.message);
-    alert(`Signup failed ⚠️ ${error.code}: ${error.message}`);
-  });
+    .then(userCred => {
+      const user = userCred.user;
+      console.log("✅ User created:", user.uid);
+      addUsertoDatabase(user);
+      return sendEmailVerification(user);
+    })
+    .then(() => {
+      alert("Verification email sent ✅\nCheck your inbox before logging in.");
+      return signOut(auth);
+    })
+    .catch(error => {
+      console.error("❌ Registration error:", error.code, error.message);
+      alert(`Signup failed ⚠️ ${error.code}: ${error.message}`);
+    });
 });
 
 // Password reset flow
@@ -109,7 +116,6 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     });
 });
 
-
 // Resend verification email
 function resendVerificationEmail() {
   const user = auth.currentUser;
@@ -123,7 +129,7 @@ function resendVerificationEmail() {
   }
 }
 
-// Login with Google account.
+// Login with Google account
 document.getElementById('googleLogin').addEventListener('click', () => {
   const provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
