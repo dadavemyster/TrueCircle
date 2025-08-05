@@ -237,7 +237,20 @@ function vote(postId, type) {
     });
   }, { onlyOnce: true });
 }
+// Show/hide button on scrolll
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("backToTop");
+  if (window.scrollY > 300) {
+    btn.style.display = "block";
+  } else {
+    btn.style.display = "none";
+  }
+});
 
+// Scroll to top
+document.getElementById("backToTop").addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
 }
