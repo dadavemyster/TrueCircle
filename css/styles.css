@@ -10,7 +10,10 @@ body {
   background-color: #357ABD;
   border: none;
 }
-
+button.active {
+  background-color: #198754 !important; /* or another color */
+  color: white;
+}
 .btn-outline-secondary {
   border-color: #357ABD;
   color: #357ABD;
