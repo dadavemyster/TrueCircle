@@ -51,7 +51,16 @@ function renderPosts() {
     .filter(post => !post.flagged) // ⬅️ Exclude flagged posts
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort((a, b) => {
+  if (currentSort === "top") {
+    return (b.upvotes || 0) - (a.upvotes || 0);
+  } else if (currentSort === "latest") {
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  } else {
+    // Default to trending (by score)
+    return (b.score || 0) - (a.score || 0);
+  }
+});
 
   feed.innerHTML = "";
 
@@ -197,7 +206,15 @@ function renderPosts() {
     }
   });
 }
+const sortFilter = document.getElementById("sortFilter");
+let currentSort = "trending";
 
+if (sortFilter) {
+  sortFilter.addEventListener("change", () => {
+    currentSort = sortFilter.value;
+    renderPosts();
+  });
+}
 function vote(postId, type) {
   const user = auth.currentUser;
   if (!user) return;
