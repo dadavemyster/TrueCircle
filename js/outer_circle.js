@@ -48,6 +48,7 @@ function renderPosts() {
 
   const posts = allPosts
     .filter(post => post.circle === "outer")
+    .filter(post => !post.flagged) // ⬅️ hide flagged posts
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
     .sort((a, b) => (b.score || 0) - (a.score || 0));
 
@@ -88,6 +89,7 @@ function renderPosts() {
           <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
           <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
           <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
+         <button class="btn btn-sm btn-outline-warning me-2 flag-post">🚩 Flag</button>
           <div class="reaction-canvas-container d-none mt-2">
             <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
             <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
@@ -153,16 +155,30 @@ function renderPosts() {
       }
     });
 
-const currentVote = post.votes?.[userUID];
-if (currentVote === "up") div.querySelector(".upvote").classList.add("active");
-if (currentVote === "down") div.querySelector(".downvote").classList.add("active");
-div.querySelector(".upvote").addEventListener("click", () => {
-  vote(post.key, "up");
-});
+    const currentVote = post.votes?.[userUID];
+    if (currentVote === "up") div.querySelector(".upvote").classList.add("active");
+    if (currentVote === "down") div.querySelector(".downvote").classList.add("active");
 
-div.querySelector(".downvote").addEventListener("click", () => {
-  vote(post.key, "down");
-});
+    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
+    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+
+    div.querySelector(".flag-post").addEventListener("click", () => {
+      if (post.flaggedBy?.[userUID]) {
+        alert("You've already flagged this post.");
+        return;
+      }
+
+      const postRef = ref(db, `posts/${post.key}`);
+      const updatedFlags = post.flaggedBy || {};
+      updatedFlags[userUID] = true;
+
+      update(postRef, {
+        flagged: true,
+        flaggedBy: updatedFlags
+      }).then(() => {
+        alert("Post flagged successfully.");
+      });
+    });
 
     div.querySelector(".delete").addEventListener("click", () => {
       if (confirm("Delete this post?")) {
