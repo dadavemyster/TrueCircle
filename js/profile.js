@@ -44,11 +44,6 @@ const postsContainer = document.getElementById("postsContainer");
 const activityContainer = document.getElementById("activityContainer");
 const friendContainer = document.getElementById("friendContainer");
 
-const yourFriendsButton = document.getElementById("yourFriends");
-const yourFriendsContainer = document.getElementById("friendList");
-const pendingFriendsButton = document.getElementById("pendingButton");
-const pendingFriendsContainer = document.getElementById("friendRequests");
-
 editProfileButton.addEventListener("click", ()=>{
     editProfileBox.classList.remove("d-none");
     editProfileImage.src = image.src;
@@ -139,17 +134,3 @@ friendButton.addEventListener("click", ()=> {
     activityButton.classList.replace("btn-success", "btn-secondary");
     friendButton.classList.replace("btn-secondary", "btn-success");
 });
-
-yourFriendsButton.addEventListener("click", ()=>{
-    yourFriendsContainer.classList.remove("d-none");
-    pendingFriendsContainer.classList.add("d-none");
-    yourFriendsButton.classList.replace("btn-secondary", "btn-success");
-    pendingFriendsButton.classList.replace("btn-success", "btn-secondary");
-}); 
-
-pendingFriendsButton.addEventListener("click", ()=>{
-    yourFriendsContainer.classList.add("d-none");
-    pendingFriendsContainer.classList.remove("d-none");
-    yourFriendsButton.classList.replace("btn-success", "btn-secondary");
-    pendingFriendsButton.classList.replace("btn-secondary", "btn-success");
-}); 
