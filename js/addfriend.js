@@ -30,6 +30,8 @@ form.addEventListener("submit", function(e) {
     const userRef = ref(db, `users/${userUID}`);
 
     const friendAdding = document.getElementById("friendEmail").value.trim().toLowerCase();
+
+    
     get(ref(db, "users")).then(snapshot => {
         snapshot.forEach(child => {
             const childData = child.val();
@@ -39,8 +41,17 @@ form.addEventListener("submit", function(e) {
             if (!childData.email) return;
             
             if (childData.email.toLowerCase() == friendAdding){
-                update(userRef, {
-                    [`friendRequests/${childUID}`] : true,
+                get(userRef).then(snapshot => {
+                    if (snapshot.child("friends").hasChild(childUID)) {
+                        document.getElementById("friendEmail").value ="";
+                        document.getElementById("friendRequestError").innerHTML = `${friendAdding} is Already Your Friend`;
+                    } else {
+                        document.getElementById("friendEmail").value ="";
+                        document.getElementById("friendRequestError").innerHTML = `Friend Request Sent to ${friendAdding}`;
+                        update(userRef, {
+                            [`friendRequests/${childUID}`] : true,
+                        });
+                    }
                 });
             }
         });
@@ -64,7 +75,7 @@ onValue(ref(db, "users"), snapshot => {
             update(userRef, {
                 [`friends/${childUID}`] : true,
             });
-            remove(ref(db, `users/${childUID}/friendRequests/${childUID}`));
+            remove(ref(db, `users/${childUID}/friendRequests/${userUID}`));
             update(childRef, {
                 [`friends/${userUID}`] : true,
             });

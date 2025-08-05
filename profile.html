@@ -117,10 +117,15 @@
                 <input type="text" placeholder="Friend Email" id="friendEmail" class="form-control"></input>
                 <button type="submit" id="addFriendButton" class="btn btn-secondary col-3">Add Friend</button>
             </form>
+            <h4 id="friendRequestError" class="text-success" ></h4>
         </div>
         <div class="container card mt-4 p-4 d-flex flex-column align-items-center">
-            <h1>Your Friends</h1>
+            <div id="buttons" class="col-12 gap-2 d-flex">
+                <button id="yourFriends" class="col-6 flex-fill btn btn-success fs-1">Your Friends</button>
+                <button id="pendingButton" class="col-6 flex-fill btn btn-secondary fs-1">Pending</button>
+            </div>
             <div id="friendList"></div>
+            <div id="friendRequests" class="d-none"></div>
         </div>
       </div>
     </section>
@@ -129,6 +134,7 @@
   <!-- Friends List Tab -->
   <script type = "module" src="js/addfriend.js"></script>
   <script type="module" src="js/friends.js"></script>
+  <script type="module" src="js/friendrequestspage.js"></script>
 
   <!-- Footer -->
   <footer class="text-center px-3 mt-5 pt-3">
