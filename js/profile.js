@@ -139,7 +139,7 @@ onAuthStateChanged(auth, user => {
   if (user) {
     const linkBox = document.getElementById("inviteLink");
     if (linkBox) {
-      linkBox.textContent = `${window.location.origin}/index.html?invite=${user.uid}`;
+      linkBox.textContent = `${window.location.origin}/TrueCircle/index.html?invite=${user.uid}`;
     }
   }
 });
