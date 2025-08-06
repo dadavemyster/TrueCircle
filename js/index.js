@@ -36,14 +36,26 @@ const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Redirect if already logged in
+// Redirect if already logged in; also logs them
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
+    const inviterUID = localStorage.getItem("inviterUID");
+    if (inviterUID && inviterUID !== user.uid) {
+      update(ref(db, `users/${user.uid}/friends`), {
+        [inviterUID]: true
+      });
+      update(ref(db, `users/${inviterUID}/friends`), {
+        [user.uid]: true
+      });
+      localStorage.removeItem("inviterUID");
+    }
+
     window.location.href = "/TrueCircle/inner_circle.html";
   } else {
     document.getElementById("appContent").style.display = "block";
   }
 });
+
 
 // User Database
 function addUsertoDatabase(user) {
