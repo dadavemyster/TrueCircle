@@ -134,3 +134,12 @@ friendButton.addEventListener("click", ()=> {
     activityButton.classList.replace("btn-success", "btn-secondary");
     friendButton.classList.replace("btn-secondary", "btn-success");
 });
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    const linkBox = document.getElementById("inviteLink");
+    if (linkBox) {
+      linkBox.textContent = `${window.location.origin}/index.html?invite=${user.uid}`;
+    }
+  }
+});

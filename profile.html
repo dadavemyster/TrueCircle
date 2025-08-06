@@ -118,6 +118,12 @@
                 <button type="submit" id="addFriendButton" class="btn btn-secondary col-3">Add Friend</button>
             </form>
         </div>
+        <div class="card mt-3 p-3">
+          <h5>Invite a Friend</h5>
+          <p>Share this link to send a friend request:</p>
+          <code id="inviteLink" class="user-select-all"></code>
+          <button class="btn btn-outline-primary btn-sm mt-2" onclick="navigator.clipboard.writeText(document.getElementById('inviteLink').innerText)">📋 Copy</button>
+        </div>
         <div class="container card mt-4 p-4 d-flex flex-column align-items-center">
             <h1>Your Friends</h1>
             <div id="friendList"></div>

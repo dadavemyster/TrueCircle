@@ -65,6 +65,16 @@ document.querySelector('form').addEventListener('submit', e => {
       if (user.emailVerified) {
         alert("Welcome to the Circle!");
         window.location.href = "inner_circle.html";
+        const urlParams = new URLSearchParams(window.location.search);
+        const inviterUID = urlParams.get('invite');
+        const user = userCred.user;
+
+        if (inviterUID && inviterUID !== user.uid) {
+          const userRef = ref(db, `users/${user.uid}`);
+          update(userRef, {
+            [`friendRequests/${inviterUID}`]: true
+          });
+        }      
       } else {
         // Let them know verification is needed
         if (confirm("Your email isn't verified yet. Would you like to resend the verification email?")) {
@@ -147,6 +157,19 @@ document.getElementById('googleLogin').addEventListener('click', () => {
     .then((result) => {
       const user = result.user;
       addUsertoDatabase(user);
+      
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const inviterUID = urlParams.get('invite');
+
+      if (inviterUID && inviterUID !== user.uid) {
+        const userRef = ref(db, `users/${user.uid}`);
+        update(userRef, {
+          [`friendRequests/${inviterUID}`]: true
+        });
+      }
+
+      
       alert("Signed in with Google ✅");
       window.location.href = "inner_circle.html";
     })
@@ -155,3 +178,4 @@ document.getElementById('googleLogin').addEventListener('click', () => {
       alert("Google login failed ❌");
     });
 });
+
