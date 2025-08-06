@@ -18,7 +18,26 @@ button.active {
   border-color: #357ABD;
   color: #357ABD;
 }
+#backToTop {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  display: none;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease;
+}
 
+#backToTop:hover {
+  background-color: #0056b3;
+}
 header {
   background-color: #3B7D57;
   border-bottom: 1px solid #e0e0e0;

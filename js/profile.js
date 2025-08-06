@@ -153,3 +153,12 @@ pendingFriendsButton.addEventListener("click", ()=>{
     yourFriendsButton.classList.replace("btn-success", "btn-secondary");
     pendingFriendsButton.classList.replace("btn-secondary", "btn-success");
 }); 
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    const linkBox = document.getElementById("inviteLink");
+    if (linkBox) {
+      linkBox.textContent = `${window.location.origin}/TrueCircle/index.html?invite=${user.uid}`;
+    }
+  }
+});
