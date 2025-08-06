@@ -44,6 +44,11 @@ const postsContainer = document.getElementById("postsContainer");
 const activityContainer = document.getElementById("activityContainer");
 const friendContainer = document.getElementById("friendContainer");
 
+const yourFriendsButton = document.getElementById("yourFriends");
+const yourFriendsContainer = document.getElementById("friendList");
+const pendingFriendsButton = document.getElementById("pendingButton");
+const pendingFriendsContainer = document.getElementById("friendRequests");
+
 editProfileButton.addEventListener("click", ()=>{
     editProfileBox.classList.remove("d-none");
     editProfileImage.src = image.src;
@@ -135,11 +140,16 @@ friendButton.addEventListener("click", ()=> {
     friendButton.classList.replace("btn-secondary", "btn-success");
 });
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    const linkBox = document.getElementById("inviteLink");
-    if (linkBox) {
-      linkBox.textContent = `${window.location.origin}/TrueCircle/index.html?invite=${user.uid}`;
-    }
-  }
-});
+yourFriendsButton.addEventListener("click", ()=>{
+    yourFriendsContainer.classList.remove("d-none");
+    pendingFriendsContainer.classList.add("d-none");
+    yourFriendsButton.classList.replace("btn-secondary", "btn-success");
+    pendingFriendsButton.classList.replace("btn-success", "btn-secondary");
+}); 
+
+pendingFriendsButton.addEventListener("click", ()=>{
+    yourFriendsContainer.classList.add("d-none");
+    pendingFriendsContainer.classList.remove("d-none");
+    yourFriendsButton.classList.replace("btn-success", "btn-secondary");
+    pendingFriendsButton.classList.replace("btn-secondary", "btn-success");
+}); 

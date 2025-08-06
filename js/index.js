@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
-import { getDatabase, ref, set, update, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -25,54 +24,19 @@ const firebaseConfig = {
   measurementId: "G-LHNKWW2X12"
 };
 
-// Store inviterUID from URL if present
-const urlParams = new URLSearchParams(window.location.search);
-const inviterUID = urlParams.get('invite');
-if (inviterUID) {
-  localStorage.setItem("inviterUID", inviterUID);
-}
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Redirect if already logged in; also logs them
+// Redirect if already logged in
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
-    const inviterUID = localStorage.getItem("inviterUID");
-    if (inviterUID && inviterUID !== user.uid) {
-      const dbRef = ref(db, `users/${inviterUID}/email`);
-      get(dbRef).then(snapshot => {
-        const inviterEmail = snapshot.val();
-        if (inviterEmail) {
-          // Add both users as friends
-          update(ref(db, `users/${user.uid}/friends`), {
-            [inviterUID]: true
-          });
-          update(ref(db, `users/${inviterUID}/friends`), {
-            [user.uid]: true
-          });
-          alert(`You are now friends with ${inviterEmail}`);
-        } else {
-          alert("Inviter not found.");
-        }
-        localStorage.removeItem("inviterUID");
-        window.location.href = "/TrueCircle/inner_circle.html";
-      }).catch(error => {
-        console.error("Error fetching inviter email:", error);
-        alert("Error adding friend.");
-        window.location.href = "/TrueCircle/inner_circle.html";
-      });
-    } else {
-      window.location.href = "/TrueCircle/inner_circle.html";
-    }
+    window.location.href = "inner_circle.html";
   } else {
     document.getElementById("appContent").style.display = "block";
   }
 });
-
-
 
 // User Database
 function addUsertoDatabase(user) {
@@ -99,20 +63,10 @@ document.querySelector('form').addEventListener('submit', e => {
       const user = userCred.user;
 
       if (user.emailVerified) {
-        const inviterUID = localStorage.getItem("inviterUID");
-        if (inviterUID && inviterUID !== user.uid) {
-          update(ref(db, `users/${user.uid}/friends`), {
-            [inviterUID]: true
-          });
-          update(ref(db, `users/${inviterUID}/friends`), {
-            [user.uid]: true
-          });
-          localStorage.removeItem("inviterUID");
-        }
-
         alert("Welcome to the Circle!");
-        window.location.href = "/TrueCircle/inner_circle.html";
+        window.location.href = "inner_circle.html";
       } else {
+        // Let them know verification is needed
         if (confirm("Your email isn't verified yet. Would you like to resend the verification email?")) {
           sendEmailVerification(user)
             .then(() => {
@@ -133,7 +87,7 @@ document.querySelector('form').addEventListener('submit', e => {
     });
 });
 
-// Register flow
+// Register flow with enhanced error handling
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -155,7 +109,7 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
     });
 });
 
-// Password reset
+// Password reset flow
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -173,27 +127,28 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     });
 });
 
-// Login with Google
+// Resend verification email
+function resendVerificationEmail() {
+  const user = auth.currentUser;
+  if (user && !user.emailVerified) {
+    sendEmailVerification(user)
+      .then(() => alert("Verification email resent 📩"))
+      .catch(err => {
+        console.error("Resend error:", err.code, err.message);
+        alert("Could not resend email. Try again later.");
+      });
+  }
+}
+
+// Login with Google account
 document.getElementById('googleLogin').addEventListener('click', () => {
   const provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
     .then((result) => {
       const user = result.user;
       addUsertoDatabase(user);
-
-      const inviterUID = localStorage.getItem("inviterUID");
-      if (inviterUID && inviterUID !== user.uid) {
-        update(ref(db, `users/${user.uid}/friends`), {
-          [inviterUID]: true
-        });
-        update(ref(db, `users/${inviterUID}/friends`), {
-          [user.uid]: true
-        });
-        localStorage.removeItem("inviterUID");
-      }
-
       alert("Signed in with Google ✅");
-      window.location.href = "/TrueCircle/inner_circle.html";
+      window.location.href = "inner_circle.html";
     })
     .catch((error) => {
       console.error("Google sign-in failed", error);
