@@ -44,14 +44,23 @@ onValue(ref(db, "posts"), snapshot => {
 
 function renderPosts() {
   const user = auth.currentUser;
-  const userUID = user.uid;
-  const userRef = ref(db, `users/${userUID}`);
+  const uid = user.uid;
 
   const posts = allPosts
     .filter(post => post.circle === "inner")
+    .filter(post => !post.flagged) // ⬅️ Exclude flagged posts
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort((a, b) => {
+  if (currentSort === "top") {
+    return (b.upvotes || 0) - (a.upvotes || 0);
+  } else if (currentSort === "latest") {
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  } else {
+    // Default to trending (by score)
+    return (b.score || 0) - (a.score || 0);
+  }
+});
 
   feed.innerHTML = "";
 
@@ -90,6 +99,7 @@ function renderPosts() {
           <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
           <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
           <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
+          <button class="btn btn-sm btn-outline-warning me-2 flag-post">🚩 Flag</button>
           <div class="reaction-canvas-container d-none mt-2">
             <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
             <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
@@ -155,44 +165,28 @@ function renderPosts() {
       }
     });
 
-    get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-      if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-        div.querySelector(".upvote").classList.add("active");
-      }
-      if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-        div.querySelector(".downvote").classList.add("active");
-      }
-    });
+    const currentVote = post.votes?.[uid];
+    if (currentVote === "up") div.querySelector(".upvote").classList.add("active");
+    if (currentVote === "down") div.querySelector(".downvote").classList.add("active");
 
-    div.querySelector(".upvote").addEventListener("click", () => {
-      get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-          remove(ref(db, `users/${userUID}/upvotedPosts/${post.key}`));
-          vote(post.key, "down");
-        } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-          remove(ref(db, `users/${userUID}/downvotedPosts/${post.key}`));
-          update(userRef, { [`upvotedPosts/${post.key}`]: true });
-          vote(post.key, "up");
-        } else {
-          update(userRef, { [`upvotedPosts/${post.key}`]: true });
-          vote(post.key, "up");
-        }
-      });
-    });
+    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
+    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
 
-    div.querySelector(".downvote").addEventListener("click", () => {
-      get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-          remove(ref(db, `users/${userUID}/downvotedPosts/${post.key}`));
-          vote(post.key, "up");
-        } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-          remove(ref(db, `users/${userUID}/upvotedPosts/${post.key}`));
-          update(userRef, { [`downvotedPosts/${post.key}`]: true });
-          vote(post.key, "down");
-        } else {
-          update(userRef, { [`downvotedPosts/${post.key}`]: true });
-          vote(post.key, "down");
-        }
+    div.querySelector(".flag-post").addEventListener("click", () => {
+      if (post.flaggedBy?.[uid]) {
+        alert("You've already flagged this post.");
+        return;
+      }
+
+      const postRef = ref(db, `posts/${post.key}`);
+      const updatedFlags = post.flaggedBy || {};
+      updatedFlags[uid] = true;
+
+      update(postRef, {
+        flagged: true,
+        flaggedBy: updatedFlags
+      }).then(() => {
+        alert("Post flagged successfully.");
       });
     });
 
@@ -212,30 +206,68 @@ function renderPosts() {
     }
   });
 }
+const sortFilter = document.getElementById("sortFilter");
+let currentSort = "trending";
 
+if (sortFilter) {
+  sortFilter.addEventListener("change", () => {
+    currentSort = sortFilter.value;
+    renderPosts();
+  });
+}
 function vote(postId, type) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const uid = user.uid;
+
   const postRef = ref(db, `posts/${postId}`);
   onValue(postRef, snapshot => {
     const post = snapshot.val();
     if (!post) return;
 
+    let votes = post.votes || {};
     let up = post.upvotes || 0;
     let down = post.downvotes || 0;
+
+    const prevVote = votes[uid];
+
+    if (prevVote === type) {
+      alert("You've already voted on this post.");
+      return;
+    }
+
+    if (prevVote === "up") up--;
+    if (prevVote === "down") down--;
 
     if (type === "up") up++;
     if (type === "down") down++;
 
+    votes[uid] = type;
     const total = up + down;
-    const newScore = total ? up / total : 0;
+    const score = total > 0 ? up / total : 0;
 
     update(postRef, {
       upvotes: up,
       downvotes: down,
-      score: newScore
+      score: score,
+      votes: votes
     });
   }, { onlyOnce: true });
 }
+// Show/hide button on scrolll
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("backToTop");
+  if (window.scrollY > 300) {
+    btn.style.display = "block";
+  } else {
+    btn.style.display = "none";
+  }
+});
 
+// Scroll to top
+document.getElementById("backToTop").addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
 }

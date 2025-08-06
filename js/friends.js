@@ -36,17 +36,10 @@ onAuthStateChanged(auth, (user) => {
                 <big id="userName">${snapshot.child("email").val()}</big>
                 <br><br>
                 <p id="bio" class="text-wrap" style="overflow-wrap: break-word">${snapshot.child("bioText").val()}</p>
-                <button class="btn btn-sm btn-outline-secondary me-2 reject">❎</button>
                 </div>
                 `;
                 
                 feed.appendChild(div);
-                div.querySelector(".reject").addEventListener("click", () => {
-                    if (confirm(`Remove Friend ${snapshot.child("email").val()}`)) {
-                        remove(ref(db, `users/${userUID}/friends/${child.key}`));
-                        remove(ref(db, `users/${child.key}/friends/${userUID}`));
-                    }
-                });
             });
         });
     });
