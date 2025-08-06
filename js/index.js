@@ -72,9 +72,11 @@ document.querySelector('form').addEventListener('submit', e => {
       if (user.emailVerified) {
         const inviterUID = localStorage.getItem("inviterUID");
         if (inviterUID && inviterUID !== user.uid) {
-          const userRef = ref(db, `users/${user.uid}`);
-          update(userRef, {
-            [`friendRequests/${inviterUID}`]: true
+          update(ref(db, `users/${user.uid}/friends`), {
+            [inviterUID]: true
+          });
+          update(ref(db, `users/${inviterUID}/friends`), {
+            [user.uid]: true
           });
           localStorage.removeItem("inviterUID");
         }
@@ -152,9 +154,11 @@ document.getElementById('googleLogin').addEventListener('click', () => {
 
       const inviterUID = localStorage.getItem("inviterUID");
       if (inviterUID && inviterUID !== user.uid) {
-        const userRef = ref(db, `users/${user.uid}`);
-        update(userRef, {
-          [`friendRequests/${inviterUID}`]: true
+        update(ref(db, `users/${user.uid}/friends`), {
+          [inviterUID]: true
+        });
+        update(ref(db, `users/${inviterUID}/friends`), {
+          [user.uid]: true
         });
         localStorage.removeItem("inviterUID");
       }
