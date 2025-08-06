@@ -58,14 +58,14 @@ onAuthStateChanged(auth, (user) => {
           alert("Inviter not found.");
         }
         localStorage.removeItem("inviterUID");
-        window.location.href = "/TrueCircle/inner_circle.html";
+        window.location.href = "inner_circle.html";
       }).catch(error => {
         console.error("Error fetching inviter email:", error);
         alert("Error adding friend.");
-        window.location.href = "/TrueCircle/inner_circle.html";
+        window.location.href = "inner_circle.html";
       });
     } else {
-      window.location.href = "/TrueCircle/inner_circle.html";
+      window.location.href = "inner_circle.html";
     }
   } else {
     document.getElementById("appContent").style.display = "block";
@@ -111,7 +111,7 @@ document.querySelector('form').addEventListener('submit', e => {
         }
 
         alert("Welcome to the Circle!");
-        window.location.href = "/TrueCircle/inner_circle.html";
+        window.location.href = "inner_circle.html";
       } else {
         if (confirm("Your email isn't verified yet. Would you like to resend the verification email?")) {
           sendEmailVerification(user)
@@ -193,7 +193,7 @@ document.getElementById('googleLogin').addEventListener('click', () => {
       }
 
       alert("Signed in with Google ✅");
-      window.location.href = "/TrueCircle/inner_circle.html";
+      window.location.href = "inner_circle.html";
     })
     .catch((error) => {
       console.error("Google sign-in failed", error);
