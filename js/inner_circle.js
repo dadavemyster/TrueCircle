@@ -48,9 +48,19 @@ function renderPosts() {
 
   const posts = allPosts
     .filter(post => post.circle === "inner")
+    .filter(post => !post.flagged) // ⬅️ Exclude flagged posts
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort((a, b) => {
+  if (currentSort === "top") {
+    return (b.upvotes || 0) - (a.upvotes || 0);
+  } else if (currentSort === "latest") {
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  } else {
+    // Default to trending (by score)
+    return (b.score || 0) - (a.score || 0);
+  }
+});
 
   feed.innerHTML = "";
 
@@ -89,6 +99,7 @@ function renderPosts() {
           <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
           <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
           <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
+          <button class="btn btn-sm btn-outline-warning me-2 flag-post">🚩 Flag</button>
           <div class="reaction-canvas-container d-none mt-2">
             <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
             <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
@@ -161,6 +172,24 @@ function renderPosts() {
     div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
     div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
 
+    div.querySelector(".flag-post").addEventListener("click", () => {
+      if (post.flaggedBy?.[uid]) {
+        alert("You've already flagged this post.");
+        return;
+      }
+
+      const postRef = ref(db, `posts/${post.key}`);
+      const updatedFlags = post.flaggedBy || {};
+      updatedFlags[uid] = true;
+
+      update(postRef, {
+        flagged: true,
+        flaggedBy: updatedFlags
+      }).then(() => {
+        alert("Post flagged successfully.");
+      });
+    });
+
     div.querySelector(".delete").addEventListener("click", () => {
       if (confirm("Delete this post?")) {
         remove(ref(db, `posts/${post.key}`));
@@ -177,7 +206,15 @@ function renderPosts() {
     }
   });
 }
+const sortFilter = document.getElementById("sortFilter");
+let currentSort = "trending";
 
+if (sortFilter) {
+  sortFilter.addEventListener("change", () => {
+    currentSort = sortFilter.value;
+    renderPosts();
+  });
+}
 function vote(postId, type) {
   const user = auth.currentUser;
   if (!user) return;
@@ -217,7 +254,20 @@ function vote(postId, type) {
     });
   }, { onlyOnce: true });
 }
+// Show/hide button on scrolll
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("backToTop");
+  if (window.scrollY > 300) {
+    btn.style.display = "block";
+  } else {
+    btn.style.display = "none";
+  }
+});
 
+// Scroll to top
+document.getElementById("backToTop").addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
 }
