@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -23,6 +23,13 @@ const firebaseConfig = {
   appId: "1:198661237874:web:a1ef7e3556f3a08e6da6eb",
   measurementId: "G-LHNKWW2X12"
 };
+
+// Store inviterUID from URL if present
+const urlParams = new URLSearchParams(window.location.search);
+const inviterUID = urlParams.get('invite');
+if (inviterUID) {
+  localStorage.setItem("inviterUID", inviterUID);
+}
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -63,20 +70,18 @@ document.querySelector('form').addEventListener('submit', e => {
       const user = userCred.user;
 
       if (user.emailVerified) {
-        alert("Welcome to the Circle!");
-        window.location.href = "inner_circle.html";
-        const urlParams = new URLSearchParams(window.location.search);
-        const inviterUID = urlParams.get('invite');
-        const user = userCred.user;
-
+        const inviterUID = localStorage.getItem("inviterUID");
         if (inviterUID && inviterUID !== user.uid) {
           const userRef = ref(db, `users/${user.uid}`);
           update(userRef, {
             [`friendRequests/${inviterUID}`]: true
           });
-        }      
+          localStorage.removeItem("inviterUID");
+        }
+
+        alert("Welcome to the Circle!");
+        window.location.href = "inner_circle.html";
       } else {
-        // Let them know verification is needed
         if (confirm("Your email isn't verified yet. Would you like to resend the verification email?")) {
           sendEmailVerification(user)
             .then(() => {
@@ -97,7 +102,7 @@ document.querySelector('form').addEventListener('submit', e => {
     });
 });
 
-// Register flow with enhanced error handling
+// Register flow
 document.querySelector('.btn-outline-secondary').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -119,7 +124,7 @@ document.querySelector('.btn-outline-secondary').addEventListener('click', () =>
     });
 });
 
-// Password reset flow
+// Password reset
 document.getElementById('resetPasswordLink').addEventListener('click', () => {
   const email = document.getElementById('email').value.trim();
   if (!email) {
@@ -137,39 +142,23 @@ document.getElementById('resetPasswordLink').addEventListener('click', () => {
     });
 });
 
-// Resend verification email
-function resendVerificationEmail() {
-  const user = auth.currentUser;
-  if (user && !user.emailVerified) {
-    sendEmailVerification(user)
-      .then(() => alert("Verification email resent 📩"))
-      .catch(err => {
-        console.error("Resend error:", err.code, err.message);
-        alert("Could not resend email. Try again later.");
-      });
-  }
-}
-
-// Login with Google account
+// Login with Google
 document.getElementById('googleLogin').addEventListener('click', () => {
   const provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
     .then((result) => {
       const user = result.user;
       addUsertoDatabase(user);
-      
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const inviterUID = urlParams.get('invite');
 
+      const inviterUID = localStorage.getItem("inviterUID");
       if (inviterUID && inviterUID !== user.uid) {
         const userRef = ref(db, `users/${user.uid}`);
         update(userRef, {
           [`friendRequests/${inviterUID}`]: true
         });
+        localStorage.removeItem("inviterUID");
       }
 
-      
       alert("Signed in with Google ✅");
       window.location.href = "inner_circle.html";
     })
@@ -178,4 +167,3 @@ document.getElementById('googleLogin').addEventListener('click', () => {
       alert("Google login failed ❌");
     });
 });
-
