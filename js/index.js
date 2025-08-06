@@ -41,20 +41,36 @@ onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
     const inviterUID = localStorage.getItem("inviterUID");
     if (inviterUID && inviterUID !== user.uid) {
-      update(ref(db, `users/${user.uid}/friends`), {
-        [inviterUID]: true
+      const dbRef = ref(db, `users/${inviterUID}/email`);
+      get(dbRef).then(snapshot => {
+        const inviterEmail = snapshot.val();
+        if (inviterEmail) {
+          // Add both users as friends
+          update(ref(db, `users/${user.uid}/friends`), {
+            [inviterUID]: true
+          });
+          update(ref(db, `users/${inviterUID}/friends`), {
+            [user.uid]: true
+          });
+          alert(`You are now friends with ${inviterEmail}`);
+        } else {
+          alert("Inviter not found.");
+        }
+        localStorage.removeItem("inviterUID");
+        window.location.href = "/TrueCircle/inner_circle.html";
+      }).catch(error => {
+        console.error("Error fetching inviter email:", error);
+        alert("Error adding friend.");
+        window.location.href = "/TrueCircle/inner_circle.html";
       });
-      update(ref(db, `users/${inviterUID}/friends`), {
-        [user.uid]: true
-      });
-      localStorage.removeItem("inviterUID");
+    } else {
+      window.location.href = "/TrueCircle/inner_circle.html";
     }
-
-    window.location.href = "/TrueCircle/inner_circle.html";
   } else {
     document.getElementById("appContent").style.display = "block";
   }
 });
+
 
 
 // User Database
