@@ -159,8 +159,58 @@ function renderPosts() {
     if (currentVote === "up") div.querySelector(".upvote").classList.add("active");
     if (currentVote === "down") div.querySelector(".downvote").classList.add("active");
 
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
-    div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
+    get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+            div.querySelector(".upvote").classList.add("active");
+        }
+        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+            div.querySelector(".downvote").classList.add("active");
+        }
+    });
+
+    div.querySelector(".upvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "down");
+            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            } else {
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "up");
+            }
+        });
+    });
+
+    div.querySelector(".downvote").addEventListener("click", () => {
+        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                vote(post.key, "up");
+            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            } else {
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+                vote(post.key, "down");
+            }
+        });
+    });
 
     div.querySelector(".flag-post").addEventListener("click", () => {
       if (post.flaggedBy?.[userUID]) {
