@@ -20,6 +20,8 @@ const storage = getStorage(app);
 const feed = document.getElementById("feed");
 const auth = getAuth(app);
 
+let currentSort = "trending";
+
 const moodFilter = document.getElementById("moodFilter");
 let currentMoodFilter = "";
 if (moodFilter) {
@@ -28,7 +30,13 @@ if (moodFilter) {
     renderPosts();
   });
 }
-
+const sortFilter = document.getElementById("sortFilter");
+if (sortFilter) {
+  sortFilter.addEventListener("change", () => {
+    currentSort = sortFilter.value;
+    renderPosts();
+  });
+}
 let allPosts = [];
 
 onValue(ref(db, "posts"), snapshot => {
@@ -50,7 +58,16 @@ function renderPosts() {
     .filter(post => post.circle === "outer")
     .filter(post => !post.flagged) // ⬅️ hide flagged posts
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort((a, b) => {
+  if (currentSort === "top") {
+    return (b.upvotes || 0) - (a.upvotes || 0);
+  } else if (currentSort === "latest") {
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  } else {
+    // Default to trending (by score)
+    return (b.score || 0) - (a.score || 0);
+  }
+});
 
   feed.innerHTML = "";
 
