@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 import { shouldHidePost } from './filterLowScorePosts.js';
 
 const firebaseConfig = {
@@ -45,24 +45,18 @@ onValue(ref(db, "posts"), snapshot => {
 function renderPosts() {
   const user = auth.currentUser;
   const uid = user.uid;
-    const userUID = user.uid;
-    const userRef = ref(db, `users/${userUID}`);
-    
+  const userRef = ref(db, `users/${uid}`);
+
   const posts = allPosts
     .filter(post => post.circle === "inner")
-    .filter(post => !post.flagged) // ⬅️ Exclude flagged posts
+    .filter(post => !post.flagged)
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
     .sort((a, b) => {
-  if (currentSort === "top") {
-    return (b.upvotes || 0) - (a.upvotes || 0);
-  } else if (currentSort === "latest") {
-    return (b.timestamp || 0) - (a.timestamp || 0);
-  } else {
-    // Default to trending (by score)
-    return (b.score || 0) - (a.score || 0);
-  }
-});
+      if (currentSort === "top") return (b.upvotes || 0) - (a.upvotes || 0);
+      if (currentSort === "latest") return (b.timestamp || 0) - (a.timestamp || 0);
+      return (b.score || 0) - (a.score || 0);
+    });
 
   feed.innerHTML = "";
 
@@ -80,7 +74,6 @@ function renderPosts() {
       const mins = Math.floor(secs / 60);
       const hours = Math.floor(mins / 60);
       const days = Math.floor(hours / 24);
-
       if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
       if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
       if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
@@ -95,55 +88,111 @@ function renderPosts() {
       <p class="mb-2">${post.content}</p>
       ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
       ${post.mood ? `<p class="text-muted small">🧠 Mood: <strong>${post.mood}</strong></p>` : ""}
-      <div class="d-flex align-items-center justify-content-between mb-1">
-        <div>
-          <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
-          <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
-          <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
-          <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
-          <button class="btn btn-sm btn-outline-warning me-2 flag-post">🚩 Flag</button>
-          <div class="reaction-canvas-container d-none mt-2">
-            <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
-            <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
-          </div>
-          <div class="reaction-gallery mt-2 d-none"></div>
-          <button class="btn btn-sm btn-outline-secondary me-2 delete ${post.email}">🗑️</button>
-          <small class="${scoreClass}">Score: ${scorePercent}%</small>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-success upvote">👍 Upvote</button>
+          <button class="btn btn-sm btn-outline-danger downvote">👎 Downvote</button>
+          <button class="btn btn-sm btn-outline-warning flag-post">🚩 Flag</button>
+          <button class="btn btn-sm btn-outline-secondary delete ${post.email}">🗑️</button>
         </div>
-        <small class="text-muted">🕓 ${postAge} by ${post.email}</small>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary add-reaction">🎨 Add Reaction</button>
+          <button class="btn btn-sm btn-outline-info see-reactions">🖼️ See Reactions</button>
+        </div>
+      </div>
+
+      <div class="reaction-canvas-container d-none mb-3">
+        <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas><br/>
+        <input type="color" class="form-control form-control-color mt-2 color-picker" value="#000000" title="Choose color" />
+        <div class="mt-2">
+          <button class="btn btn-secondary btn-sm me-2 clear-canvas">Clear</button>
+          <button class="btn btn-success btn-sm submit-reaction">Submit</button>
+        </div>
+      </div>
+
+      <div class="reaction-gallery mt-2 d-none"></div>
+
+      <div class="text-muted small mb-1">
+        <span class="${scoreClass}">Score: ${scorePercent}%</span> • 
+        <span>🕓 ${postAge} by ${post.email}</span>
       </div>
     `;
 
     const canvasContainer = div.querySelector(".reaction-canvas-container");
     const canvas = canvasContainer.querySelector("canvas");
     const ctx = canvas.getContext("2d");
+    const colorPicker = canvasContainer.querySelector(".color-picker");
+    const clearBtn = canvasContainer.querySelector(".clear-canvas");
 
     let drawing = false;
+    let currentColor = "#000000";
+
+    colorPicker.addEventListener("input", (e) => {
+      currentColor = e.target.value;
+    });
+
+    clearBtn.addEventListener("click", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
 
     div.querySelector(".add-reaction").addEventListener("click", () => {
       canvasContainer.classList.toggle("d-none");
     });
 
-    canvas.onmousedown = () => drawing = true;
-    canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
-    canvas.onmousemove = e => {
-      if (!drawing) return;
-      const rect = canvas.getBoundingClientRect();
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#000";
-      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    };
+ // Setup drawing events (mouse and touch)
+canvas.onmousedown = () => drawing = true;
+canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
+canvas.onmousemove = e => {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = currentColor;
+  ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+};
+
+// 🟢 Touch support
+canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  ctx.beginPath();
+  ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = currentColor;
+  ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+});
+
+canvas.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  drawing = false;
+  ctx.beginPath();
+});
 
     div.querySelector(".submit-reaction").addEventListener("click", async () => {
       const dataURL = canvas.toDataURL("image/png");
       const blob = await (await fetch(dataURL)).blob();
-      const storageRef = sRef(storage, `reactions-images/${post.key}/${Date.now()}.png`);
+      const fileName = `${uid}_${Date.now()}.png`;
+      const storageRef = sRef(storage, `reactions-images/${post.key}/${fileName}`);
       await uploadBytes(storageRef, blob);
       alert("Reaction uploaded!");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       canvasContainer.classList.add("d-none");
     });
 
@@ -160,119 +209,46 @@ function renderPosts() {
           const img = document.createElement("img");
           img.src = url;
           img.style.width = "100px";
-          img.style.marginRight = "5px";
-          img.classList.add("rounded", "shadow-sm");
-          gallery.appendChild(img);
+          img.classList.add("rounded", "shadow-sm", "me-2", "mb-2");
+
+          if (file.name.startsWith(uid)) {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "❌";
+            deleteBtn.className = "btn btn-sm btn-outline-danger ms-1";
+            deleteBtn.addEventListener("click", async () => {
+              await deleteObject(file);
+              alert("Reaction deleted.");
+              img.remove();
+              deleteBtn.remove();
+            });
+            gallery.appendChild(img);
+            gallery.appendChild(deleteBtn);
+          } else {
+            gallery.appendChild(img);
+          }
         }
-      }
-    });
-
-    const currentVote = post.votes?.[uid];
-    if (currentVote === "up") div.querySelector(".upvote").classList.add("active");
-    if (currentVote === "down") div.querySelector(".downvote").classList.add("active");
-
-    get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-        if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-            div.querySelector(".upvote").classList.add("active");
-        }
-        if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-            div.querySelector(".downvote").classList.add("active");
-        }
-    });
-
-    div.querySelector(".upvote").addEventListener("click", () => {
-        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
-                remove(userPostRef);
-                vote(post.key, "down");
-            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
-                remove(userPostRef);
-                update(userRef, {
-                    [`upvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "up");
-            } else {
-                update(userRef, {
-                    [`upvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "up");
-            }
-        });
-    });
-
-    div.querySelector(".downvote").addEventListener("click", () => {
-        get(ref(db, `users/${userUID}`)).then(userDataSnapshot => {
-            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/downvotedPosts/${post.key}`);
-                remove(userPostRef);
-                vote(post.key, "up");
-            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
-                const userPostRef = ref(db, `users/${userUID}/upvotedPosts/${post.key}`);
-                remove(userPostRef);
-                update(userRef, {
-                    [`downvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "down");
-            } else {
-                update(userRef, {
-                    [`downvotedPosts/${post.key}`] : true,
-                });
-                vote(post.key, "down");
-            }
-        });
-    });
-
-    div.querySelector(".flag-post").addEventListener("click", () => {
-      if (post.flaggedBy?.[uid]) {
-        alert("You've already flagged this post.");
-        return;
-      }
-
-      const postRef = ref(db, `posts/${post.key}`);
-      const updatedFlags = post.flaggedBy || {};
-      updatedFlags[uid] = true;
-
-      update(postRef, {
-        flagged: true,
-        flaggedBy: updatedFlags
-      }).then(() => {
-        alert("Post flagged successfully.");
-      });
-    });
-
-    div.querySelector(".delete").addEventListener("click", () => {
-      if (confirm("Delete this post?")) {
-        remove(ref(db, `posts/${post.key}`));
       }
     });
 
     feed.appendChild(div);
-
-    if (user && user.email !== post.email) {
-      const deleteButtons = document.getElementsByClassName(post.email);
-      for (let i = 0; i < deleteButtons.length; i++) {
-        deleteButtons[i].classList.add("d-none");
-      }
-    }
   });
 }
-const sortFilter = document.getElementById("sortFilter");
-let currentSort = "trending";
 
+let currentSort = "trending";
+const sortFilter = document.getElementById("sortFilter");
 if (sortFilter) {
   sortFilter.addEventListener("change", () => {
     currentSort = sortFilter.value;
     renderPosts();
   });
 }
+
 function vote(postId, type) {
   const user = auth.currentUser;
   if (!user) return;
   const uid = user.uid;
-
   const postRef = ref(db, `posts/${postId}`);
+
   onValue(postRef, snapshot => {
     const post = snapshot.val();
     if (!post) return;
@@ -280,17 +256,14 @@ function vote(postId, type) {
     let votes = post.votes || {};
     let up = post.upvotes || 0;
     let down = post.downvotes || 0;
-
     const prevVote = votes[uid];
 
     if (prevVote === type) {
-      alert("You've already voted on this post.");
+      alert("You've already voted.");
       return;
     }
-
     if (prevVote === "up") up--;
     if (prevVote === "down") down--;
-
     if (type === "up") up++;
     if (type === "down") down++;
 
@@ -306,20 +279,16 @@ function vote(postId, type) {
     });
   }, { onlyOnce: true });
 }
-// Show/hide button on scrolll
+
 window.addEventListener("scroll", () => {
   const btn = document.getElementById("backToTop");
-  if (window.scrollY > 300) {
-    btn.style.display = "block";
-  } else {
-    btn.style.display = "none";
-  }
+  btn.style.display = window.scrollY > 300 ? "block" : "none";
 });
 
-// Scroll to top
 document.getElementById("backToTop").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
+
 function openComments() {
   document.getElementById('commentOverlay').classList.remove('d-none');
 }

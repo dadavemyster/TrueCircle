@@ -41,7 +41,8 @@ form.addEventListener("submit", async function(e) {
     imageURL = await getDownloadURL(imageRef);
   }
 
-  push(ref(db, "posts"), {
+  // ⬇️ Push the post to Firebase
+  await push(ref(db, "posts"), {
     content: content,
     imageURL: imageURL,
     timestamp: Date.now(),
@@ -55,4 +56,11 @@ form.addEventListener("submit", async function(e) {
 
   form.reset();
   alert("Your post is now part of the circle 💬");
+
+  // ⬇️ Automatically redirect based on selected circle
+  if (circleType === "inner") {
+    window.location.href = "inner_circle.html";
+  } else if (circleType === "outer") {
+    window.location.href = "outer_circle.html";
+  }
 });
