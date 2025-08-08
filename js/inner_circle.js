@@ -91,29 +91,35 @@ function renderPosts() {
     const div = document.createElement("div");
     div.className = "card mb-3 p-3 shadow-sm";
 
-    div.innerHTML = `
-      <p class="mb-2">${post.content}</p>
-      ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
-      ${post.mood ? `<p class="text-muted small">🧠 Mood: <strong>${post.mood}</strong></p>` : ""}
-      <div class="d-flex align-items-center justify-content-between mb-1">
-        <div>
-          <button class="btn btn-sm btn-outline-success me-2 upvote">👍</button>
-          <button class="btn btn-sm btn-outline-danger me-2 downvote">👎</button>
-          <button class="btn btn-sm btn-outline-primary me-2 add-reaction">🎨 Add Reaction</button>
-          <button class="btn btn-sm btn-outline-info me-2 see-reactions">🖼️ See Reactions</button>
-          <button class="btn btn-sm btn-outline-warning me-2 flag-post">🚩 Flag</button>
-          <div class="reaction-canvas-container d-none mt-2">
-            <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas>
-            <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
-          </div>
-          <div class="reaction-gallery mt-2 d-none"></div>
-          <button class="btn btn-sm btn-outline-secondary me-2 delete ${post.email}">🗑️</button>
-          <small class="${scoreClass}">Score: ${scorePercent}%</small>
-        </div>
-        <small class="text-muted">🕓 ${postAge} by ${post.email}</small>
-      </div>
-    `;
+div.innerHTML = `
+  <p class="mb-2">${post.content}</p>
+  ${post.imageURL ? `<img class="post-image mb-2" src="${post.imageURL}" alt="Uploaded image">` : ""}
+  ${post.mood ? `<p class="text-muted small">🧠 Mood: <strong>${post.mood}</strong></p>` : ""}
 
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-success upvote">👍 Upvote</button>
+      <button class="btn btn-sm btn-outline-danger downvote">👎 Downvote</button>
+      <button class="btn btn-sm btn-outline-warning flag-post">🚩 Flag</button>
+      <button class="btn btn-sm btn-outline-secondary delete ${post.email}">🗑️</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-primary add-reaction">🎨 Add Reaction</button>
+      <button class="btn btn-sm btn-outline-info see-reactions">🖼️ See Reactions</button>
+    </div>
+  </div>
+
+  <div class="reaction-canvas-container d-none mb-3">
+    <canvas width="200" height="200" style="border:1px solid #ccc;"></canvas><br/>
+    <button class="btn btn-success btn-sm mt-2 submit-reaction">Submit</button>
+  </div>
+  <div class="reaction-gallery mt-2 d-none"></div>
+
+  <div class="text-muted small mb-1">
+    <span class="${scoreClass}">Score: ${scorePercent}%</span> • 
+    <span>🕓 ${postAge} by ${post.email}</span>
+  </div>
+`;
     const canvasContainer = div.querySelector(".reaction-canvas-container");
     const canvas = canvasContainer.querySelector("canvas");
     const ctx = canvas.getContext("2d");
