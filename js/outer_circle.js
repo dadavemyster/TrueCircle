@@ -98,7 +98,7 @@ function renderPosts() {
           <button class="btn btn-sm btn-outline-success upvote">👍 Upvote</button>
           <button class="btn btn-sm btn-outline-danger downvote">👎 Downvote</button>
           <button class="btn btn-sm btn-outline-warning flag-post">🚩 Flag</button>
-          <button class="btn btn-sm btn-outline-secondary delete ${post.email}">🗑️</button>
+          ${user.email === post.email ? `<button class="btn btn-sm btn-outline-secondary delete-post">🗑️</button>` : ""}
         </div>
         <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-sm btn-outline-primary add-reaction">🎨 Add Reaction</button>
