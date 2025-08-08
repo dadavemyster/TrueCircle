@@ -118,6 +118,18 @@ function renderPosts() {
         <span class="${scoreClass}">Score: ${scorePercent}%</span> • 
         <span>🕓 ${postAge} by ${post.email}</span>
       </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 👍 Upvotes: </small><small>${post.upvotes}</small>
+      </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 👎 Downvotes: </small><small>${post.downvotes}</small>
+      </div>
+      <hr>
+      <div class="d-flex align-items-center justify-content-between mb-1">
+      <small>Total 💬 Comments: </small><small>${"comment#"}</small>
+      </div>
     `;
 
     const upvoteBtn = div.querySelector(".upvote");
