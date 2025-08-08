@@ -230,6 +230,14 @@ function renderPosts() {
     });
 
     feed.appendChild(div);
+    const deleteBtn = div.querySelector(".delete-post");
+if (deleteBtn) {
+  deleteBtn.addEventListener("click", () => {
+    if (confirm("Delete this post?")) {
+      remove(ref(db, `posts/${post.key}`));
+    }
+  });
+}
   });
 }
 
