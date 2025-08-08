@@ -43,8 +43,14 @@ body {
   border: none;
 }
 button.active {
-  background-color: #198754 !important; /* or another color */
+  background-color: #198754 !important; /* green for upvote */
   color: white;
+  border-color: #198754;
+}
+
+button.downvote.active {
+  background-color: #dc3545 !important; /* red for downvote */
+  border-color: #dc3545;
 }
 .btn-outline-secondary {
   border-color: #357ABD;

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
@@ -52,8 +52,7 @@ onValue(ref(db, "posts"), snapshot => {
 
 function renderPosts() {
   const user = auth.currentUser;
-  const uid = user.uid;
-  const userRef = ref(db, `users/${uid}`);
+  const uid = user?.uid;
 
   const posts = allPosts
     .filter(post => post.circle === "outer")
@@ -98,7 +97,7 @@ function renderPosts() {
           <button class="btn btn-sm btn-outline-success upvote">👍 Upvote</button>
           <button class="btn btn-sm btn-outline-danger downvote">👎 Downvote</button>
           <button class="btn btn-sm btn-outline-warning flag-post">🚩 Flag</button>
-          ${user.email === post.email ? `<button class="btn btn-sm btn-outline-secondary delete-post">🗑️</button>` : ""}
+          ${user?.email === post.email ? `<button class="btn btn-sm btn-outline-secondary delete-post">🗑️</button>` : ""}
         </div>
         <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-sm btn-outline-primary add-reaction">🎨 Add Reaction</button>
@@ -123,11 +122,23 @@ function renderPosts() {
       </div>
     `;
 
+    const upvoteBtn = div.querySelector(".upvote");
+    const downvoteBtn = div.querySelector(".downvote");
+    const addReactionBtn = div.querySelector(".add-reaction");
+    const seeReactionsBtn = div.querySelector(".see-reactions");
+
+    if (post.votes?.[uid] === "up") upvoteBtn.classList.add("active");
+    if (post.votes?.[uid] === "down") downvoteBtn.classList.add("active");
+
+    upvoteBtn.addEventListener("click", () => vote(post.key, "up", upvoteBtn, downvoteBtn));
+    downvoteBtn.addEventListener("click", () => vote(post.key, "down", upvoteBtn, downvoteBtn));
+
     const canvasContainer = div.querySelector(".reaction-canvas-container");
     const canvas = canvasContainer.querySelector("canvas");
     const ctx = canvas.getContext("2d");
     const colorPicker = canvasContainer.querySelector(".color-picker");
     const clearBtn = canvasContainer.querySelector(".clear-canvas");
+    const submitBtn = canvasContainer.querySelector(".submit-reaction");
 
     let drawing = false;
     let currentColor = "#000000";
@@ -135,7 +146,6 @@ function renderPosts() {
     colorPicker.addEventListener("input", e => currentColor = e.target.value);
     clearBtn.addEventListener("click", () => ctx.clearRect(0, 0, canvas.width, canvas.height));
 
-    // Mouse
     canvas.onmousedown = () => drawing = true;
     canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
     canvas.onmousemove = e => {
@@ -150,8 +160,7 @@ function renderPosts() {
       ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     };
 
-    // Touch
-    canvas.addEventListener("touchstart", (e) => {
+    canvas.addEventListener("touchstart", e => {
       e.preventDefault();
       drawing = true;
       const touch = e.touches[0];
@@ -159,7 +168,7 @@ function renderPosts() {
       ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
     }, { passive: false });
 
-    canvas.addEventListener("touchmove", (e) => {
+    canvas.addEventListener("touchmove", e => {
       if (!drawing) return;
       e.preventDefault();
       const touch = e.touches[0];
@@ -178,11 +187,11 @@ function renderPosts() {
       ctx.beginPath();
     });
 
-    div.querySelector(".add-reaction").addEventListener("click", () => {
+    addReactionBtn.addEventListener("click", () => {
       canvasContainer.classList.toggle("d-none");
     });
 
-    div.querySelector(".submit-reaction").addEventListener("click", async () => {
+    submitBtn.addEventListener("click", async () => {
       const dataURL = canvas.toDataURL("image/png");
       const blob = await (await fetch(dataURL)).blob();
       const fileName = `${Date.now()}_${uid}.png`;
@@ -193,7 +202,7 @@ function renderPosts() {
       canvasContainer.classList.add("d-none");
     });
 
-    div.querySelector(".see-reactions").addEventListener("click", async () => {
+    seeReactionsBtn.addEventListener("click", async () => {
       const gallery = div.querySelector(".reaction-gallery");
       gallery.classList.toggle("d-none");
       if (!gallery.classList.contains("d-none")) {
@@ -206,8 +215,7 @@ function renderPosts() {
           const img = document.createElement("img");
           img.src = url;
           img.style.width = "100px";
-          img.style.marginRight = "5px";
-          img.classList.add("rounded", "shadow-sm");
+          img.classList.add("rounded", "shadow-sm", "me-2", "mb-2");
 
           if (file.name.includes(uid)) {
             const delBtn = document.createElement("button");
@@ -229,21 +237,20 @@ function renderPosts() {
       }
     });
 
-    feed.appendChild(div);
-    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
-div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
     const deleteBtn = div.querySelector(".delete-post");
-if (deleteBtn) {
-  deleteBtn.addEventListener("click", () => {
-    if (confirm("Delete this post?")) {
-      remove(ref(db, `posts/${post.key}`));
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => {
+        if (confirm("Delete this post?")) {
+          remove(ref(db, `posts/${post.key}`));
+        }
+      });
     }
-  });
-}
+
+    feed.appendChild(div);
   });
 }
 
-function vote(postId, type) {
+function vote(postId, type, upvoteBtn, downvoteBtn) {
   const user = auth.currentUser;
   if (!user) return;
   const uid = user.uid;
@@ -252,6 +259,7 @@ function vote(postId, type) {
   onValue(postRef, snapshot => {
     const post = snapshot.val();
     if (!post) return;
+
     let votes = post.votes || {};
     let up = post.upvotes || 0;
     let down = post.downvotes || 0;
@@ -273,5 +281,10 @@ function vote(postId, type) {
     const score = total > 0 ? up / total : 0;
 
     update(postRef, { upvotes: up, downvotes: down, score, votes });
+
+    if (upvoteBtn && downvoteBtn) {
+      upvoteBtn.classList.toggle("active", type === "up");
+      downvoteBtn.classList.toggle("active", type === "down");
+    }
   }, { onlyOnce: true });
 }
