@@ -230,6 +230,8 @@ function renderPosts() {
     });
 
     feed.appendChild(div);
+    div.querySelector(".upvote").addEventListener("click", () => vote(post.key, "up"));
+div.querySelector(".downvote").addEventListener("click", () => vote(post.key, "down"));
     const deleteBtn = div.querySelector(".delete-post");
 if (deleteBtn) {
   deleteBtn.addEventListener("click", () => {
