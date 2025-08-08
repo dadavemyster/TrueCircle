@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 import { shouldHidePost } from './filterLowScorePosts.js';
@@ -54,6 +54,7 @@ onValue(ref(db, "posts"), snapshot => {
 function renderPosts() {
   const user = auth.currentUser;
   const uid = user?.uid;
+  const userRef = ref(db, `users/${uid}`);
 
   const posts = allPosts
     .filter(post => post.circle === "inner")
@@ -135,6 +136,45 @@ function renderPosts() {
     upvoteBtn.addEventListener("click", () => vote(post.key, "up", upvoteBtn, downvoteBtn));
     downvoteBtn.addEventListener("click", () => vote(post.key, "down", upvoteBtn, downvoteBtn));
 
+    // Add post to user database upvotedPosts
+    div.querySelector(".upvote").addEventListener("click", () => {
+        get(ref(db, `users/${uid}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${uid}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+            } else if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${uid}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+            } else {
+                update(userRef, {
+                    [`upvotedPosts/${post.key}`] : true,
+                });
+            }
+        });
+    });
+
+    // Add post to user database downvotedPosts
+    div.querySelector(".downvote").addEventListener("click", () => {
+        get(ref(db, `users/${uid}`)).then(userDataSnapshot => {
+            if (userDataSnapshot.child("downvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${uid}/downvotedPosts/${post.key}`);
+                remove(userPostRef);
+            } else if (userDataSnapshot.child("upvotedPosts").hasChild(post.key)) {
+                const userPostRef = ref(db, `users/${uid}/upvotedPosts/${post.key}`);
+                remove(userPostRef);
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+            } else {
+                update(userRef, {
+                    [`downvotedPosts/${post.key}`] : true,
+                });
+            }
+        });
+    });
     let drawing = false;
     let currentColor = "#000000";
 
