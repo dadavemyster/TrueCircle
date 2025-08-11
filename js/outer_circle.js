@@ -40,6 +40,32 @@ if (sortFilter) {
 }
 
 let allPosts = [];
+
+// ads; not legit ads, but fake ads with links
+let allAds = [];
+let nextAdIndex = 0;
+
+onValue(ref(db, "ads"), snap => {
+  allAds = [];
+  snap.forEach(child => allAds.push({ id: child.key, ...child.val() }));
+});
+
+function createAdCard(ad) {
+  const div = document.createElement("div");
+  div.className = "card mb-3 p-3 shadow-sm border-warning";
+  div.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <small class="text-muted">Sponsored</small>
+      <img src="img/sun.png" alt="" style="opacity:.0;width:1px;height:1px" /> 
+    </div>
+    ${ad.imageURL ? `<a href="${ad.link || '#'}" target="_blank" rel="noopener noreferrer">
+        <img class="img-fluid rounded mb-2" src="${ad.imageURL}" alt="Advertisement">
+      </a>` : ""}
+    ${ad.text ? `<p class="mb-0">${ad.text}</p>` : ""}
+  `;
+  return div;
+}
+
 onValue(ref(db, "posts"), snapshot => {
   allPosts = [];
   snapshot.forEach(child => {
@@ -67,7 +93,7 @@ function renderPosts() {
 
   feed.innerHTML = "";
 
-  posts.forEach(post => {
+  posts.forEach((post, i) => {
     const scorePercent = (post.score * 100).toFixed(1);
     const scoreClass = post.score >= 0.75 ? "score-high" : post.score >= 0.5 ? "score-medium" : "score-low";
     const now = Date.now();
@@ -288,6 +314,12 @@ function renderPosts() {
     }
 
     feed.appendChild(div);
+
+  if ((i + 1) % 10 === 0 && allAds.length > 0) {
+    const ad = allAds[Math.floor(Math.random() * allAds.length)];
+    feed.appendChild(createAdCard(ad));
+  }
+
   });
 }
 
