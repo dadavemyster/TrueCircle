@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove, get, push, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
@@ -314,6 +314,62 @@ function renderPosts() {
     }
 
     feed.appendChild(div);
+
+
+    // Comments section
+const commentsContainer = document.createElement("div");
+commentsContainer.classList.add("comments-section", "mt-3", "d-none");
+
+const commentsList = document.createElement("div");
+commentsList.classList.add("comments-list", "mb-2");
+
+const commentInput = document.createElement("input");
+commentInput.type = "text";
+commentInput.placeholder = "Write a comment...";
+commentInput.classList.add("form-control", "mb-2");
+
+const submitCommentBtn = document.createElement("button");
+submitCommentBtn.textContent = "Post Comment";
+submitCommentBtn.classList.add("btn", "btn-sm", "btn-primary");
+
+// Load comments from Firebase
+const commentsRef = ref(db, `posts/${post.key}/comments`);
+onValue(commentsRef, snap => {
+  commentsList.innerHTML = "";
+  snap.forEach(child => {
+    const c = child.val();
+    const cDiv = document.createElement("div");
+    cDiv.classList.add("mb-1");
+    cDiv.innerHTML = `<strong>${c.author}:</strong> ${c.text}`;
+    commentsList.appendChild(cDiv);
+  });
+});
+
+submitCommentBtn.addEventListener("click", () => {
+  const text = commentInput.value.trim();
+  if (!text) return;
+  const newCommentRef = push(commentsRef);
+  set(newCommentRef, {
+    text: text,
+    author: user?.email || "Anonymous",
+    timestamp: Date.now()
+  });
+  commentInput.value = "";
+});
+
+commentsContainer.appendChild(commentsList);
+commentsContainer.appendChild(commentInput);
+commentsContainer.appendChild(submitCommentBtn);
+
+const toggleCommentsBtn = document.createElement("button");
+toggleCommentsBtn.textContent = "💬 Comments";
+toggleCommentsBtn.classList.add("btn", "btn-sm", "btn-outline-secondary", "mt-2");
+toggleCommentsBtn.addEventListener("click", () => {
+  commentsContainer.classList.toggle("d-none");
+});
+
+div.appendChild(toggleCommentsBtn);
+div.appendChild(commentsContainer);
 
   if ((i + 1) % 10 === 0 && allAds.length > 0) {
     const ad = allAds[Math.floor(Math.random() * allAds.length)];
