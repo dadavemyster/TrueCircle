@@ -23,6 +23,7 @@ const feed = document.getElementById("feed");
 
 let currentSort = "trending";
 let currentMoodFilter = "";
+let currentSearchQuery = "";
 
 const moodFilter = document.getElementById("moodFilter");
 if (moodFilter) {
@@ -53,7 +54,7 @@ onValue(ref(db, "ads"), snap => {
 
 function createAdCard(ad) {
   const div = document.createElement("div");
-  div.className = "card mb-3 p-3 shadow-sm border-warning";
+  div.className = "card mb-3 p-3 shadow-sm border-warning post";
   div.innerHTML = `
     <div class="d-flex justify-content-between align-items-center mb-2">
       <small class="text-muted">Sponsored</small>
@@ -87,11 +88,12 @@ function renderPosts() {
     .filter(post => !post.flagged)
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
+    .filter(post => !currentSearchQuery || post.content.toLowerCase().includes(currentSearchQuery))
     .sort((a, b) => {
       if (currentSort === "top") return (b.upvotes || 0) - (a.upvotes || 0);
       if (currentSort === "latest") return (b.timestamp || 0) - (a.timestamp || 0);
       return (b.score || 0) - (a.score || 0);
-    });
+  });
 
   feed.innerHTML = "";
 
@@ -430,4 +432,13 @@ function openComments() {
 }
 function closeComments() {
   document.getElementById('commentOverlay').classList.add('d-none');
+}
+
+// Search bar
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', function (e) {
+    currentSearchQuery = e.target.value.toLowerCase();
+    renderPosts();
+  });
 }
