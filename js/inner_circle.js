@@ -88,12 +88,17 @@ function renderPosts() {
     .filter(post => !post.flagged)
     .filter(post => !shouldHidePost(post))
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
-    .filter(post => !currentSearchQuery || post.content.toLowerCase().includes(currentSearchQuery))
+    .filter(post => {
+      if (!currentSearchQuery) return true;
+      const contentMatch = post.content?.toLowerCase().includes(currentSearchQuery);
+      const authorMatch = post.email?.toLowerCase().includes(currentSearchQuery);
+      return contentMatch || authorMatch;
+    })
     .sort((a, b) => {
       if (currentSort === "top") return (b.upvotes || 0) - (a.upvotes || 0);
       if (currentSort === "latest") return (b.timestamp || 0) - (a.timestamp || 0);
       return (b.score || 0) - (a.score || 0);
-  });
+    });
 
   feed.innerHTML = "";
 
