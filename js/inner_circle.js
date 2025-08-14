@@ -41,6 +41,14 @@ if (sortFilter) {
   });
 }
 
+const friendButton = document.getElementById("friendOnly");
+let friendToggle = false;
+friendButton.addEventListener("click", ()=> {
+    friendToggle = !friendToggle;
+    friendButton.classList.toggle("active");
+    renderPosts();
+});
+
 let allPosts = [];
 
 // ads; not legit ads, but fake ads with links
@@ -314,7 +322,19 @@ function renderPosts() {
       });
     }
 
-    feed.appendChild(div);
+    if (friendToggle) {
+        get(ref(db, `users/${uid}/friends`)).then(snapshot => {
+            snapshot.forEach(friendSnap => {
+                get(ref(db, `users/${friendSnap.key}`)).then(friendSnapshot => {
+                    if (friendSnapshot.child("email").val() == post.email) {
+                        feed.appendChild(div);
+                    }
+                });
+            });
+        });
+    } else {
+        feed.appendChild(div);
+    }
   
 // Comments section
 const commentsContainer = document.createElement("div");
