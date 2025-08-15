@@ -23,6 +23,7 @@ const auth = getAuth(app);
 let currentSort = "trending";
 const moodFilter = document.getElementById("moodFilter");
 let currentMoodFilter = "";
+let currentSearchQuery = "";
 
 if (moodFilter) {
   moodFilter.addEventListener("change", function () {
@@ -93,6 +94,12 @@ function renderPosts() {
     .filter(post => post.circle === "outer")
     .filter(post => !post.flagged)
     .filter(post => !currentMoodFilter || post.mood === currentMoodFilter)
+    .filter(post => {
+      if (!currentSearchQuery) return true;
+      const contentMatch = post.content?.toLowerCase().includes(currentSearchQuery);
+      const authorMatch = post.email?.toLowerCase().includes(currentSearchQuery);
+      return contentMatch || authorMatch;
+    })
     .sort((a, b) => {
       if (currentSort === "top") return (b.upvotes || 0) - (a.upvotes || 0);
       else if (currentSort === "latest") return (b.timestamp || 0) - (a.timestamp || 0);
@@ -153,7 +160,7 @@ function renderPosts() {
 
       <div class="text-muted small mb-1">
         <span class="${scoreClass}">Score: ${scorePercent}%</span> • 
-        <span>🕓 ${postAge} by ${post.email}</span>
+        <span>🕓 ${postAge}</span>
       </div>
     `;
 
@@ -436,4 +443,13 @@ function vote(postId, type, upvoteBtn, downvoteBtn) {
       downvoteBtn.classList.toggle("active", type === "down");
     }
   }, { onlyOnce: true });
+}
+
+// Search bar
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', function (e) {
+    currentSearchQuery = e.target.value.toLowerCase();
+    renderPosts();
+  });
 }
